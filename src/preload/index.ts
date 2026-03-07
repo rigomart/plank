@@ -1,12 +1,21 @@
 import { electronAPI } from '@electron-toolkit/preload'
-import { contextBridge } from 'electron'
+import { contextBridge, ipcRenderer } from 'electron'
 
-// Custom APIs for renderer
-const api = {}
+const api = {
+  trpc: (payload: { id: string; type: string; path: string; input: unknown }): Promise<unknown> =>
+    ipcRenderer.invoke('trpc', payload),
+  trpcUnsubscribe: (payload: { id: string }): Promise<void> =>
+    ipcRenderer.invoke('trpc:unsubscribe', payload),
+  onTrpcData: (
+    callback: (event: { id: string; type: string; data?: unknown; error?: string }) => void
+  ): void => {
+    ipcRenderer.on('trpc:data', (_event, data) => callback(data))
+  },
+  removeTrpcListeners: (): void => {
+    ipcRenderer.removeAllListeners('trpc:data')
+  }
+}
 
-// Use `contextBridge` APIs to expose Electron APIs to
-// renderer only if context isolation is enabled, otherwise
-// just add to the DOM global.
 if (process.contextIsolated) {
   try {
     contextBridge.exposeInMainWorld('electron', electronAPI)
