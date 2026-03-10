@@ -1,8 +1,10 @@
 import { initTRPC } from '@trpc/server'
-import { app } from 'electron'
+import { app, dialog } from 'electron'
 import { z } from 'zod'
 import { clearToken, getSession, pollForToken, startDeviceFlow } from './auth'
+import { fetchRepoIssues, fetchUserRepos } from './github'
 import { killTerminal, resizeTerminal, spawnTerminal, writeToTerminal } from './pty'
+import { detectGitRepo, loadLastWorkspace, saveLastWorkspace } from './workspace'
 
 const t = initTRPC.create()
 
@@ -32,6 +34,47 @@ export const appRouter = t.router({
 
     logout: t.procedure.mutation(() => {
       clearToken()
+    })
+  }),
+
+  github: t.router({
+    repos: t.procedure.query(async () => {
+      const session = await getSession()
+      if (!session) throw new Error('Not authenticated')
+      return fetchUserRepos(session.token)
+    }),
+
+    issues: t.procedure
+      .input(z.object({ owner: z.string(), repo: z.string() }))
+      .query(async ({ input }) => {
+        const session = await getSession()
+        if (!session) throw new Error('Not authenticated')
+        return fetchRepoIssues(session.token, input.owner, input.repo)
+      })
+  }),
+
+  workspace: t.router({
+    selectFolder: t.procedure.mutation(async () => {
+      const result = await dialog.showOpenDialog({
+        properties: ['openDirectory'],
+        title: 'Select project folder'
+      })
+      if (result.canceled || result.filePaths.length === 0) return null
+      const folderPath = result.filePaths[0]
+      saveLastWorkspace(folderPath)
+      const repo = detectGitRepo(folderPath)
+      return { path: folderPath, repo }
+    }),
+
+    detectRepo: t.procedure.input(z.object({ folderPath: z.string() })).query(({ input }) => {
+      return detectGitRepo(input.folderPath)
+    }),
+
+    lastUsed: t.procedure.query(() => {
+      const folderPath = loadLastWorkspace()
+      if (!folderPath) return null
+      const repo = detectGitRepo(folderPath)
+      return { path: folderPath, repo }
     })
   }),
 

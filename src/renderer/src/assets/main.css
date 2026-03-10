@@ -233,6 +233,240 @@ body {
   color: #444;
 }
 
+/* Sidebar header info (workspace mode) */
+
+.sidebar-header-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.sidebar-repo {
+  font-size: 13px;
+  font-weight: 600;
+  color: #e0e0e8;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sidebar-path {
+  font-size: 11px;
+  color: #444;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sidebar-change {
+  padding: 3px 8px;
+  border-radius: 4px;
+  border: 1px solid #2a2a3e;
+  background: transparent;
+  color: #666;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.1s;
+  flex-shrink: 0;
+}
+
+.sidebar-change:hover {
+  background: #1e1e2a;
+  color: #a0a0b0;
+}
+
+/* Issues subheader */
+
+.issues-subheader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px 6px;
+}
+
+/* Repo search */
+
+.repo-search {
+  padding: 8px 10px;
+  border-bottom: 1px solid #1e1e2a;
+}
+
+.repo-filter {
+  width: 100%;
+  padding: 6px 10px;
+  border-radius: 4px;
+  border: 1px solid #2a2a3e;
+  background: #0d0d14;
+  color: #c8c8d0;
+  font-size: 12px;
+  outline: none;
+  transition: border-color 0.1s;
+  box-sizing: border-box;
+}
+
+.repo-filter:focus {
+  border-color: #4a4fc4;
+}
+
+.repo-filter::placeholder {
+  color: #444;
+}
+
+/* Repo list */
+
+.repo-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 6px;
+}
+
+.repo-card {
+  display: block;
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 6px;
+  margin-bottom: 2px;
+  cursor: pointer;
+  transition: background 0.1s;
+  border: none;
+  background: transparent;
+  text-align: left;
+  color: inherit;
+  font: inherit;
+}
+
+.repo-card:hover {
+  background: #16161f;
+}
+
+.repo-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: #e0e0e8;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.repo-badge {
+  font-size: 10px;
+  font-weight: 500;
+  padding: 1px 6px;
+  border-radius: 10px;
+  background: #2a2a3e;
+  color: #888;
+}
+
+.repo-desc {
+  font-size: 12px;
+  color: #555;
+  margin-top: 4px;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.repo-meta {
+  font-size: 11px;
+  color: #444;
+  margin-top: 4px;
+}
+
+/* List states */
+
+.list-loading,
+.list-empty {
+  padding: 20px 16px;
+  font-size: 12px;
+  color: #555;
+  text-align: center;
+}
+
+/* Workspace picker */
+
+.workspace-picker {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 40px;
+}
+
+.workspace-picker-icon {
+  font-size: 36px;
+  opacity: 0.3;
+}
+
+.workspace-picker-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #e0e0e8;
+}
+
+.workspace-picker-subtitle {
+  font-size: 13px;
+  color: #555;
+  text-align: center;
+  max-width: 320px;
+  line-height: 1.5;
+}
+
+.workspace-picker-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 24px;
+  border-radius: 6px;
+  border: 1px solid #4a4fc4;
+  background: #4a4fc4;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+  margin-top: 4px;
+}
+
+.workspace-picker-button:hover {
+  background: #5a5fd4;
+  border-color: #5a5fd4;
+}
+
+.workspace-picker-hint {
+  font-size: 12px;
+  color: #444;
+}
+
+/* No repo info */
+
+.no-repo-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 20px;
+  text-align: center;
+}
+
+.no-repo-info-title {
+  font-size: 13px;
+  color: #555;
+  font-weight: 500;
+}
+
+.no-repo-info-subtitle {
+  font-size: 12px;
+  color: #444;
+  line-height: 1.5;
+}
+
 /* Sidebar footer */
 
 .sidebar-footer {

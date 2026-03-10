@@ -7,6 +7,7 @@ import { trpc } from '../trpc'
 interface TerminalProps {
   command: string
   args: string[]
+  cwd?: string
   initialInput?: string
   onExit?: (exitCode: number) => void
 }
@@ -14,6 +15,7 @@ interface TerminalProps {
 export function Terminal({
   command,
   args,
+  cwd,
   initialInput,
   onExit
 }: TerminalProps): React.JSX.Element {
@@ -55,7 +57,7 @@ export function Terminal({
     })
 
     const sub = trpc.terminal.spawn.subscribe(
-      { command, args },
+      { command, args, cwd },
       {
         onData(event) {
           if (event.type === 'started') {
@@ -104,7 +106,7 @@ export function Terminal({
       sub.unsubscribe()
       term.dispose()
     }
-  }, [command, args])
+  }, [command, args, cwd])
 
   return <div ref={containerRef} style={{ width: '100%', height: '100%' }} />
 }
