@@ -1,8 +1,9 @@
 import { join } from 'node:path'
 import { electronApp, is, optimizer } from '@electron-toolkit/utils'
-import { Menu, app, BrowserWindow, ipcMain, shell } from 'electron'
+import { app, BrowserWindow, Menu, shell } from 'electron'
 import icon from '../../resources/icon.png?asset'
 import { createIPCHandler } from './ipc'
+import { killAllTerminals } from './pty'
 import { appRouter } from './trpc'
 
 function createWindow(): void {
@@ -53,9 +54,6 @@ app.whenReady().then(() => {
     optimizer.watchWindowShortcuts(window)
   })
 
-  // IPC test
-  ipcMain.on('ping', () => console.log('pong'))
-
   createIPCHandler(appRouter)
 
   createWindow()
@@ -71,6 +69,7 @@ app.whenReady().then(() => {
 // for applications and their menu bar to stay active until the user quits
 // explicitly with Cmd + Q.
 app.on('window-all-closed', () => {
+  killAllTerminals()
   if (process.platform !== 'darwin') {
     app.quit()
   }

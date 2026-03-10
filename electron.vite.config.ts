@@ -3,7 +3,14 @@ import react from '@vitejs/plugin-react'
 import { defineConfig } from 'electron-vite'
 
 export default defineConfig({
-  main: {},
+  main: {
+    envPrefix: 'GITHUB_',
+    build: {
+      rollupOptions: {
+        external: ['node-pty']
+      }
+    }
+  },
   preload: {},
   renderer: {
     resolve: {
