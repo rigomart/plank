@@ -9,6 +9,12 @@
   "files": {
     "includes": ["**", "!**/out", "!**/dist"]
   },
+  "css": {
+    "parser": {
+      "cssModules": false,
+      "tailwindDirectives": true
+    }
+  },
   "formatter": {
     "enabled": true,
     "indentStyle": "space",

@@ -31,7 +31,7 @@ function App(): React.JSX.Element {
 
   if (loading) {
     return (
-      <div className="loading-screen">
+      <div className="flex h-screen w-screen items-center justify-center">
         <div className="loading-spinner" />
       </div>
     )

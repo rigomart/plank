@@ -1,12 +1,15 @@
-import { Octokit } from 'octokit'
+import { Octokit } from '@octokit/core'
+import { paginateRest } from '@octokit/plugin-paginate-rest'
 
-function createClient(token: string): Octokit {
-  return new Octokit({ auth: token })
+const PaginatingOctokit = Octokit.plugin(paginateRest)
+
+function createClient(token: string) {
+  return new PaginatingOctokit({ auth: token })
 }
 
 export async function fetchUserRepos(token: string) {
   const octokit = createClient(token)
-  return octokit.paginate(octokit.rest.repos.listForAuthenticatedUser, {
+  return octokit.paginate('GET /user/repos', {
     sort: 'pushed',
     per_page: 100
   })
@@ -14,7 +17,7 @@ export async function fetchUserRepos(token: string) {
 
 export async function fetchRepoIssues(token: string, owner: string, repo: string) {
   const octokit = createClient(token)
-  const issues = await octokit.paginate(octokit.rest.issues.listForRepo, {
+  const issues = await octokit.paginate('GET /repos/{owner}/{repo}/issues', {
     owner,
     repo,
     state: 'open',

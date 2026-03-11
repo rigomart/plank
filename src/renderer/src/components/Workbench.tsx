@@ -1,7 +1,15 @@
-import { useCallback, useEffect, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useState } from 'react'
 import type { Session } from '../App'
 import { trpc } from '../trpc'
-import { Terminal } from './Terminal'
+import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar'
+import { Badge } from './ui/badge'
+import { Button } from './ui/button'
+import { Input } from './ui/input'
+import { ScrollArea } from './ui/scroll-area'
+import { Separator } from './ui/separator'
+import { Skeleton } from './ui/skeleton'
+
+const Terminal = lazy(() => import('./Terminal').then((m) => ({ default: m.Terminal })))
 
 interface RepoInfo {
   owner: string
@@ -57,7 +65,6 @@ export function Workbench({ session, onLogout }: WorkbenchProps): React.JSX.Elem
   const [reposLoading, setReposLoading] = useState(true)
   const [repoFilter, setRepoFilter] = useState('')
 
-  // Fetch repos on mount for the picker
   useEffect(() => {
     trpc.github.repos
       .query()
@@ -66,7 +73,6 @@ export function Workbench({ session, onLogout }: WorkbenchProps): React.JSX.Elem
       .finally(() => setReposLoading(false))
   }, [])
 
-  // Check for last-used workspace on mount
   useEffect(() => {
     trpc.workspace.lastUsed.query().then((result) => {
       if (result) {
@@ -75,7 +81,6 @@ export function Workbench({ session, onLogout }: WorkbenchProps): React.JSX.Elem
     })
   }, [])
 
-  // Fetch issues when workspace changes
   const currentRepo = workspace?.repo ?? null
   useEffect(() => {
     if (!currentRepo) {
@@ -107,7 +112,6 @@ export function Workbench({ session, onLogout }: WorkbenchProps): React.JSX.Elem
   const handleSelectRepo = async (repo: GitHubRepo): Promise<void> => {
     const ws = await openFolderDialog()
     if (!ws) return
-    // Use the explicitly selected repo, not the auto-detected one
     setWorkspace({
       folderPath: ws.folderPath,
       repo: { owner: repo.owner.login, repo: repo.name, fullName: repo.full_name }
@@ -146,67 +150,97 @@ export function Workbench({ session, onLogout }: WorkbenchProps): React.JSX.Elem
     )
 
     return (
-      <div className="workbench">
-        <aside className="sidebar">
-          <div className="sidebar-header">
-            <span className="sidebar-title">Repositories</span>
-            {!reposLoading && <span className="sidebar-count">{repos.length}</span>}
+      <div className="flex h-full w-full">
+        <aside className="flex h-full w-80 min-w-80 flex-col overflow-hidden border-r border-border bg-card">
+          <div className="flex items-center justify-between px-4 pb-2.5 pt-3.5">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Repositories
+            </span>
+            {!reposLoading && (
+              <Badge variant="secondary" className="text-[11px]">
+                {repos.length}
+              </Badge>
+            )}
           </div>
-          <div className="repo-search">
-            <input
-              className="repo-filter"
+          <div className="border-b border-border px-2.5 pb-2">
+            <Input
               placeholder="Search repositories..."
               value={repoFilter}
               onChange={(e) => setRepoFilter(e.target.value)}
+              className="h-8 text-xs"
             />
           </div>
-          <div className="repo-list">
-            {reposLoading ? (
-              <div className="list-loading">Loading repositories...</div>
-            ) : filteredRepos.length === 0 ? (
-              <div className="list-empty">No repositories found</div>
-            ) : (
-              filteredRepos.map((repo) => (
-                <button
-                  key={repo.id}
-                  type="button"
-                  className="repo-card"
-                  onClick={() => handleSelectRepo(repo)}
-                >
-                  <div className="repo-name">
-                    {repo.full_name}
-                    {repo.private && <span className="repo-badge">private</span>}
-                  </div>
-                  {repo.description && <div className="repo-desc">{repo.description}</div>}
-                  {repo.open_issues_count > 0 && (
-                    <div className="repo-meta">
-                      {repo.open_issues_count} open issue{repo.open_issues_count !== 1 && 's'}
+          <ScrollArea className="flex-1">
+            <div className="p-1.5">
+              {reposLoading ? (
+                <div className="space-y-2 p-3">
+                  <Skeleton className="h-12 w-full" />
+                  <Skeleton className="h-12 w-full" />
+                  <Skeleton className="h-12 w-full" />
+                </div>
+              ) : filteredRepos.length === 0 ? (
+                <div className="p-4 text-center text-xs text-muted-foreground">
+                  No repositories found
+                </div>
+              ) : (
+                filteredRepos.map((repo) => (
+                  <button
+                    key={repo.id}
+                    type="button"
+                    className="mb-0.5 w-full cursor-pointer rounded-md border-none bg-transparent p-2.5 text-left text-inherit transition-colors hover:bg-sidebar-accent"
+                    onClick={() => handleSelectRepo(repo)}
+                  >
+                    <div className="flex items-center gap-1.5 text-[13px] font-medium text-card-foreground">
+                      {repo.full_name}
+                      {repo.private && (
+                        <Badge variant="secondary" className="text-[10px]">
+                          private
+                        </Badge>
+                      )}
                     </div>
-                  )}
-                </button>
-              ))
-            )}
-          </div>
-          <div className="sidebar-footer">
-            <img className="avatar" src={session.user.avatar_url} alt={session.user.login} />
-            <span className="avatar-name">{session.user.name || session.user.login}</span>
-            <button type="button" className="logout-button" onClick={onLogout}>
+                    {repo.description && (
+                      <div className="mt-1 line-clamp-1 text-xs text-muted-foreground">
+                        {repo.description}
+                      </div>
+                    )}
+                    {repo.open_issues_count > 0 && (
+                      <div className="mt-1 text-[11px] text-muted-foreground/60">
+                        {repo.open_issues_count} open issue{repo.open_issues_count !== 1 && 's'}
+                      </div>
+                    )}
+                  </button>
+                ))
+              )}
+            </div>
+          </ScrollArea>
+          <Separator />
+          <div className="flex items-center gap-2 px-3.5 py-2.5">
+            <Avatar size="sm">
+              <AvatarImage src={session.user.avatar_url} alt={session.user.login} />
+              <AvatarFallback>{session.user.login[0]}</AvatarFallback>
+            </Avatar>
+            <span className="flex-1 truncate text-xs text-muted-foreground">
+              {session.user.name || session.user.login}
+            </span>
+            <Button variant="ghost" size="xs" onClick={onLogout}>
               Sign out
-            </button>
+            </Button>
           </div>
         </aside>
-        <main className="main-panel">
-          <div className="workspace-picker">
-            <div className="workspace-picker-icon">&#128193;</div>
-            <div className="workspace-picker-title">Open a workspace</div>
-            <div className="workspace-picker-subtitle">
+        <main className="flex flex-1 flex-col overflow-hidden bg-background">
+          <div className="flex flex-1 flex-col items-center justify-center gap-4 p-10">
+            <div className="text-4xl opacity-30">&#128193;</div>
+            <div className="text-lg font-semibold text-card-foreground">Open a workspace</div>
+            <div className="max-w-xs text-center text-sm leading-relaxed text-muted-foreground">
               Select a local folder to start working. GitHub issues will be loaded automatically
               from the detected remote.
             </div>
-            <button type="button" className="workspace-picker-button" onClick={handleOpenFolder}>
+            <Button className="mt-1" onClick={handleOpenFolder}>
               Open Folder
-            </button>
-            <div className="workspace-picker-hint">or select a repository from the sidebar</div>
+            </Button>
+            <div className="text-xs text-muted-foreground/60">
+              or select a repository from the sidebar
+            </div>
           </div>
         </main>
       </div>
@@ -215,107 +249,152 @@ export function Workbench({ session, onLogout }: WorkbenchProps): React.JSX.Elem
 
   // Mode B: Workspace selected — show issues
   return (
-    <div className="workbench">
-      <aside className="sidebar">
-        <div className="sidebar-header">
-          <div className="sidebar-header-info">
-            <span className="sidebar-repo">{workspace.repo?.fullName || folderName}</span>
-            <span className="sidebar-path" title={workspace.folderPath}>
+    <div className="flex h-full w-full">
+      <aside className="flex h-full w-80 min-w-80 flex-col overflow-hidden border-r border-border bg-card">
+        <div className="flex items-center justify-between border-b border-border px-4 pb-2.5 pt-3.5">
+          <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+            <span className="truncate text-[13px] font-semibold text-card-foreground">
+              {workspace.repo?.fullName || folderName}
+            </span>
+            <span
+              className="truncate text-[11px] text-muted-foreground/60"
+              title={workspace.folderPath}
+            >
               {workspace.folderPath}
             </span>
           </div>
-          <button type="button" className="sidebar-change" onClick={handleChangeWorkspace}>
+          <Button variant="ghost" size="xs" className="shrink-0" onClick={handleChangeWorkspace}>
             Change
-          </button>
+          </Button>
         </div>
         {workspace.repo ? (
           <>
-            <div className="issues-subheader">
-              <span className="sidebar-title">Issues</span>
-              <span className="sidebar-count">{issues.length}</span>
+            <div className="flex items-center justify-between px-4 pb-1.5 pt-2.5">
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                Issues
+              </span>
+              <Badge variant="secondary" className="text-[11px]">
+                {issues.length}
+              </Badge>
             </div>
-            <div className="issue-list">
-              {issuesLoading ? (
-                <div className="list-loading">Loading issues...</div>
-              ) : issues.length === 0 ? (
-                <div className="list-empty">No open issues</div>
-              ) : (
-                issues.map((issue) => (
-                  <div
-                    key={issue.id}
-                    className={`issue-card${selectedId === issue.id ? ' issue-card--active' : ''}`}
-                  >
-                    <div className="issue-top">
-                      <span className="issue-number">#{issue.number}</span>
-                      <div className="issue-labels">
-                        {issue.labels.map((label) => (
-                          <span
-                            key={label.name}
-                            className="issue-label"
-                            style={{ background: `#${label.color}` }}
-                          >
-                            {label.name}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                    <div className="issue-title">{issue.title}</div>
-                    {issue.body && <div className="issue-desc">{issue.body}</div>}
-                    <button
-                      type="button"
-                      className="issue-launch"
-                      onClick={() => handleLaunch(issue)}
-                      disabled={selectedId === issue.id && !exited}
-                    >
-                      {selectedId === issue.id && !exited ? 'Running' : 'Start'}
-                    </button>
+            <ScrollArea className="flex-1">
+              <div className="p-1.5">
+                {issuesLoading ? (
+                  <div className="space-y-2 p-3">
+                    <Skeleton className="h-16 w-full" />
+                    <Skeleton className="h-16 w-full" />
+                    <Skeleton className="h-16 w-full" />
                   </div>
-                ))
-              )}
-            </div>
+                ) : issues.length === 0 ? (
+                  <div className="p-4 text-center text-xs text-muted-foreground">
+                    No open issues
+                  </div>
+                ) : (
+                  issues.map((issue) => (
+                    <div
+                      key={issue.id}
+                      className={`mb-0.5 rounded-md p-2.5 transition-colors ${
+                        selectedId === issue.id
+                          ? 'border border-border bg-accent'
+                          : 'hover:bg-sidebar-accent'
+                      }`}
+                    >
+                      <div className="mb-1 flex items-center gap-2">
+                        <span className="text-[11px] font-medium tabular-nums text-muted-foreground">
+                          #{issue.number}
+                        </span>
+                        <div className="flex flex-wrap gap-1">
+                          {issue.labels.map((label) => (
+                            <span
+                              key={label.name}
+                              className="rounded-full px-1.5 py-px text-[10px] font-semibold leading-4 text-white opacity-85"
+                              style={{ background: `#${label.color}` }}
+                            >
+                              {label.name}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="mb-1 text-[13px] font-medium leading-snug text-card-foreground">
+                        {issue.title}
+                      </div>
+                      {issue.body && (
+                        <div className="mb-2 line-clamp-2 text-xs leading-relaxed text-muted-foreground">
+                          {issue.body}
+                        </div>
+                      )}
+                      <Button
+                        variant={selectedId === issue.id && !exited ? 'default' : 'secondary'}
+                        size="xs"
+                        onClick={() => handleLaunch(issue)}
+                        disabled={selectedId === issue.id && !exited}
+                      >
+                        {selectedId === issue.id && !exited ? 'Running' : 'Start'}
+                      </Button>
+                    </div>
+                  ))
+                )}
+              </div>
+            </ScrollArea>
           </>
         ) : (
-          <div className="no-repo-info">
-            <div className="no-repo-info-title">No GitHub remote detected</div>
-            <div className="no-repo-info-subtitle">
+          <div className="flex flex-1 flex-col items-center justify-center gap-2 p-5 text-center">
+            <div className="text-[13px] font-medium text-muted-foreground">
+              No GitHub remote detected
+            </div>
+            <div className="text-xs leading-relaxed text-muted-foreground/60">
               Issues are not available for this folder.
               <br />
               You can still use the terminal below.
             </div>
           </div>
         )}
-        <div className="sidebar-footer">
-          <img className="avatar" src={session.user.avatar_url} alt={session.user.login} />
-          <span className="avatar-name">{session.user.name || session.user.login}</span>
-          <button type="button" className="logout-button" onClick={onLogout}>
+        <Separator />
+        <div className="flex items-center gap-2 px-3.5 py-2.5">
+          <Avatar size="sm">
+            <AvatarImage src={session.user.avatar_url} alt={session.user.login} />
+            <AvatarFallback>{session.user.login[0]}</AvatarFallback>
+          </Avatar>
+          <span className="flex-1 truncate text-xs text-muted-foreground">
+            {session.user.name || session.user.login}
+          </span>
+          <Button variant="ghost" size="xs" onClick={onLogout}>
             Sign out
-          </button>
+          </Button>
         </div>
       </aside>
-      <main className="main-panel">
+      <main className="flex flex-1 flex-col overflow-hidden bg-background">
         {activeIssue ? (
-          <div className="terminal-panel">
+          <div className="flex flex-1 flex-col overflow-hidden">
             {exited && (
-              <div className="exit-banner">
+              <div className="flex items-center justify-between border-b border-border bg-card px-3 py-1.5 text-xs text-muted-foreground">
                 <span>Process exited</span>
-                <button type="button" onClick={handleClose}>
+                <Button variant="ghost" size="xs" onClick={handleClose}>
                   Close
-                </button>
+                </Button>
               </div>
             )}
-            <Terminal
-              key={activeIssue.id}
-              command="claude"
-              args={[]}
-              cwd={workspace.folderPath}
-              initialInput={buildPrompt(activeIssue)}
-              onExit={handleExit}
-            />
+            <Suspense
+              fallback={
+                <div className="flex flex-1 items-center justify-center text-xs text-muted-foreground">
+                  Loading terminal...
+                </div>
+              }
+            >
+              <Terminal
+                key={activeIssue.id}
+                command="claude"
+                args={[]}
+                cwd={workspace.folderPath}
+                initialInput={buildPrompt(activeIssue)}
+                onExit={handleExit}
+              />
+            </Suspense>
           </div>
         ) : (
-          <div className="empty-state">
-            <div className="empty-icon">&#9654;</div>
-            <div className="empty-text">
+          <div className="flex flex-1 flex-col items-center justify-center gap-3 text-muted-foreground/40">
+            <div className="text-3xl">&#9654;</div>
+            <div className="text-sm">
               {workspace.repo
                 ? 'Select an issue and click Start'
                 : 'No issues available — use the terminal directly'}
