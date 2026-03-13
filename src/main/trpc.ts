@@ -1,10 +1,18 @@
-import { initTRPC } from '@trpc/server'
+import { existsSync } from 'node:fs'
+import { join } from 'node:path'
+import { initTRPC, TRPCError } from '@trpc/server'
 import { app, dialog } from 'electron'
 import { z } from 'zod'
 import { clearToken, getSession, pollForToken, startDeviceFlow } from './auth'
-import { fetchRepoIssues, fetchUserRepos } from './github'
+import { fetchRepoIssues } from './github'
 import { killTerminal, resizeTerminal, spawnTerminal, writeToTerminal } from './pty'
-import { detectGitRepo, loadLastWorkspace, saveLastWorkspace } from './workspace'
+import {
+  addWorkspace,
+  detectGitRepo,
+  loadWorkspaceData,
+  removeWorkspace,
+  setLastUsed
+} from './workspace'
 
 const t = initTRPC.create()
 
@@ -38,12 +46,6 @@ export const appRouter = t.router({
   }),
 
   github: t.router({
-    repos: t.procedure.query(async () => {
-      const session = await getSession()
-      if (!session) throw new Error('Not authenticated')
-      return fetchUserRepos(session.token)
-    }),
-
     issues: t.procedure
       .input(z.object({ owner: z.string(), repo: z.string() }))
       .query(async ({ input }) => {
@@ -54,27 +56,39 @@ export const appRouter = t.router({
   }),
 
   workspace: t.router({
-    selectFolder: t.procedure.mutation(async () => {
+    list: t.procedure.query(() => {
+      const data = loadWorkspaceData()
+      data.workspaces = data.workspaces.filter((w) => existsSync(w.folderPath))
+      return { workspaces: data.workspaces, lastUsedPath: data.lastUsedPath }
+    }),
+
+    add: t.procedure.mutation(async () => {
       const result = await dialog.showOpenDialog({
         properties: ['openDirectory'],
-        title: 'Select project folder'
+        title: 'Select a git repository folder'
       })
       if (result.canceled || result.filePaths.length === 0) return null
+
       const folderPath = result.filePaths[0]
-      saveLastWorkspace(folderPath)
+      if (!existsSync(join(folderPath, '.git'))) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'Selected folder is not a git repository'
+        })
+      }
+
       const repo = detectGitRepo(folderPath)
-      return { path: folderPath, repo }
+      return addWorkspace(folderPath, repo)
     }),
 
-    detectRepo: t.procedure.input(z.object({ folderPath: z.string() })).query(({ input }) => {
-      return detectGitRepo(input.folderPath)
+    remove: t.procedure.input(z.object({ folderPath: z.string() })).mutation(({ input }) => {
+      removeWorkspace(input.folderPath)
     }),
 
-    lastUsed: t.procedure.query(() => {
-      const folderPath = loadLastWorkspace()
-      if (!folderPath) return null
-      const repo = detectGitRepo(folderPath)
-      return { path: folderPath, repo }
+    setActive: t.procedure.input(z.object({ folderPath: z.string() })).mutation(({ input }) => {
+      setLastUsed(input.folderPath)
+      const repo = detectGitRepo(input.folderPath)
+      return { folderPath: input.folderPath, repo }
     })
   }),
 

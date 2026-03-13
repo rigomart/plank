@@ -36,9 +36,13 @@ export function Terminal({
       fontSize: 13,
       fontFamily: 'Menlo, Monaco, "Courier New", monospace',
       theme: {
-        background: '#0d0d14',
-        foreground: '#c8c8d0',
-        cursor: '#4a4fc4'
+        background: '#09090b',
+        foreground: '#a1a1aa',
+        cursor: '#e4e4e7',
+        cursorAccent: '#09090b',
+        selectionBackground: '#1c1c1f',
+        black: '#09090b',
+        brightBlack: '#52525b'
       }
     })
     const fitAddon = new FitAddon()

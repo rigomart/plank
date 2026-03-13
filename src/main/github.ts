@@ -7,14 +7,6 @@ function createClient(token: string) {
   return new PaginatingOctokit({ auth: token })
 }
 
-export async function fetchUserRepos(token: string) {
-  const octokit = createClient(token)
-  return octokit.paginate('GET /user/repos', {
-    sort: 'pushed',
-    per_page: 100
-  })
-}
-
 export async function fetchRepoIssues(token: string, owner: string, repo: string) {
   const octokit = createClient(token)
   const issues = await octokit.paginate('GET /repos/{owner}/{repo}/issues', {

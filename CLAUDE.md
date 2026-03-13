@@ -6,3 +6,6 @@
 - Lint: `bun run lint` (biome lint .)
 - Check (lint + format + imports): `bun run check` (biome check --write .)
 - Typecheck: `bun run typecheck`
+
+## Guidelines
+- After finishing a change, run check and build

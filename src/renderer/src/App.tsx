@@ -1,3 +1,4 @@
+import { Loader2 } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { LoginScreen } from './components/LoginScreen'
 import { Workbench } from './components/Workbench'
@@ -31,8 +32,8 @@ function App(): React.JSX.Element {
 
   if (loading) {
     return (
-      <div className="flex h-screen w-screen items-center justify-center">
-        <div className="loading-spinner" />
+      <div className="flex h-screen w-screen items-center justify-center bg-background">
+        <Loader2 className="size-5 animate-spin text-muted-foreground" />
       </div>
     )
   }
