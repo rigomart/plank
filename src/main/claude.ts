@@ -52,7 +52,8 @@ export async function* streamChat(
         permissionMode: 'bypassPermissions',
         allowDangerouslySkipPermissions: true,
         includePartialMessages: true,
-        ...(sessionId ? { resume: sessionId, continue: true } : { continue: true })
+        // Resume existing session, or start fresh (no continue = new session)
+        ...(sessionId ? { resume: sessionId, continue: true } : {})
       }
     })
 

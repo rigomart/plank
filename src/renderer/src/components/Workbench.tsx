@@ -2,12 +2,13 @@ import { useCallback, useEffect, useState } from 'react'
 import { trpc } from '../trpc'
 import type { RepoInfo, Workspace, WorkspaceEntry } from '../types'
 import { ChatPanel } from './ChatPanel'
+import { ChatSidebar } from './ChatSidebar'
 import { HeaderBar } from './HeaderBar'
 
 export function Workbench(): React.JSX.Element {
   const [workspace, setWorkspace] = useState<Workspace | null>(null)
   const [workspaces, setWorkspaces] = useState<WorkspaceEntry[]>([])
-  const [chatId, setChatId] = useState(() => crypto.randomUUID())
+  const [chatId, setChatId] = useState<string | null>(null)
 
   useEffect(() => {
     trpc.workspace.list
@@ -26,6 +27,19 @@ export function Workbench(): React.JSX.Element {
       .catch(() => {})
   }, [])
 
+  const handleNewChat = useCallback(() => {
+    if (!workspace) return
+    const id = crypto.randomUUID()
+    trpc.claude.createChat
+      .mutate({ id, workspacePath: workspace.folderPath })
+      .then(() => setChatId(id))
+      .catch(() => {})
+  }, [workspace])
+
+  const handleSelectChat = useCallback((id: string) => {
+    setChatId(id)
+  }, [])
+
   const handleAddWorkspace = async (): Promise<void> => {
     try {
       const entry = await trpc.workspace.add.mutate()
@@ -36,7 +50,7 @@ export function Workbench(): React.JSX.Element {
         return [...prev, ws]
       })
       setWorkspace({ folderPath: ws.folderPath, repo: ws.repo })
-      setChatId(crypto.randomUUID())
+      setChatId(null)
     } catch {}
   }
 
@@ -46,12 +60,8 @@ export function Workbench(): React.JSX.Element {
       folderPath: result.folderPath,
       repo: result.repo as RepoInfo | null
     })
-    setChatId(crypto.randomUUID())
+    setChatId(null)
   }
-
-  const handleNewChat = useCallback(() => {
-    setChatId(crypto.randomUUID())
-  }, [])
 
   return (
     <div className="flex h-full w-full flex-col">
@@ -63,7 +73,23 @@ export function Workbench(): React.JSX.Element {
         onNewChat={handleNewChat}
       />
       {workspace ? (
-        <ChatPanel key={chatId} workspace={workspace} chatId={chatId} />
+        <div className="flex min-h-0 flex-1">
+          <ChatSidebar
+            workspace={workspace}
+            activeChatId={chatId}
+            onSelectChat={handleSelectChat}
+            onNewChat={handleNewChat}
+          />
+          {chatId ? (
+            <ChatPanel key={chatId} workspace={workspace} chatId={chatId} />
+          ) : (
+            <div className="flex flex-1 items-center justify-center">
+              <span className="text-sm text-muted-foreground">
+                Select a chat or start a new one
+              </span>
+            </div>
+          )}
+        </div>
       ) : (
         <div className="flex flex-1 items-center justify-center">
           <span className="text-sm text-muted-foreground">Select a workspace to get started</span>

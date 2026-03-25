@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { trpc } from '../trpc'
 import type { ChatMessage, MessagePart } from '../types'
 
@@ -26,8 +26,36 @@ function appendText(parts: MessagePart[], delta: string): MessagePart[] {
 export function useChat({ chatId, cwd }: UseChatOptions) {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [isStreaming, setIsStreaming] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
   const unsubRef = useRef<{ unsubscribe: () => void } | null>(null)
   const sessionIdRef = useRef<string | undefined>(undefined)
+  const messagesRef = useRef<ChatMessage[]>([])
+
+  // Keep ref in sync with state
+  useEffect(() => {
+    messagesRef.current = messages
+  }, [messages])
+
+  // Load existing messages from persistence
+  useEffect(() => {
+    setIsLoading(true)
+    trpc.claude.getChat
+      .query({ chatId })
+      .then((chat) => {
+        if (chat?.messages?.length) {
+          setMessages(chat.messages as ChatMessage[])
+          const lastAssistant = [...chat.messages].reverse().find((m) => m.role === 'assistant')
+          if (lastAssistant?.sessionId) {
+            sessionIdRef.current = lastAssistant.sessionId
+          }
+          if (chat.sessionId) {
+            sessionIdRef.current = chat.sessionId
+          }
+        }
+      })
+      .catch(() => {})
+      .finally(() => setIsLoading(false))
+  }, [chatId])
 
   const sendMessage = useCallback(
     (text: string) => {
@@ -46,15 +74,21 @@ export function useChat({ chatId, cwd }: UseChatOptions) {
         parts: []
       }
 
-      setMessages((prev) => [...prev, userMsg, assistantMsg])
+      // Read current messages from ref (avoids side effects inside state updater)
+      const currentMessages = messagesRef.current
+
+      // Update state first (pure)
+      setMessages([...currentMessages, userMsg, assistantMsg])
       setIsStreaming(true)
 
+      // Then subscribe (side effect, outside state updater)
       unsubRef.current = trpc.claude.chat.subscribe(
         {
           chatId,
           prompt: text.trim(),
           cwd,
-          sessionId: sessionIdRef.current
+          sessionId: sessionIdRef.current,
+          messages: currentMessages
         },
         {
           onData(chunk) {
@@ -90,10 +124,10 @@ export function useChat({ chatId, cwd }: UseChatOptions) {
                 setMessages((prev) =>
                   updateLastAssistant(prev, assistantId, (m) => ({
                     ...m,
-                    parts: m.parts.map((p) =>
-                      p.type === 'tool-call' && p.toolCallId === chunk.toolCallId
-                        ? { ...p, input: p.input + chunk.delta }
-                        : p
+                    parts: m.parts.map((part) =>
+                      part.type === 'tool-call' && part.toolCallId === chunk.toolCallId
+                        ? { ...part, input: part.input + chunk.delta }
+                        : part
                     )
                   }))
                 )
@@ -103,23 +137,22 @@ export function useChat({ chatId, cwd }: UseChatOptions) {
                 setMessages((prev) =>
                   updateLastAssistant(prev, assistantId, (m) => {
                     const exists = m.parts.some(
-                      (p) => p.type === 'tool-call' && p.toolCallId === chunk.toolCallId
+                      (part) => part.type === 'tool-call' && part.toolCallId === chunk.toolCallId
                     )
                     if (exists) {
                       return {
                         ...m,
-                        parts: m.parts.map((p) =>
-                          p.type === 'tool-call' && p.toolCallId === chunk.toolCallId
+                        parts: m.parts.map((part) =>
+                          part.type === 'tool-call' && part.toolCallId === chunk.toolCallId
                             ? {
-                                ...p,
+                                ...part,
                                 input: JSON.stringify(chunk.input, null, 2),
                                 state: 'running' as const
                               }
-                            : p
+                            : part
                         )
                       }
                     }
-                    // Tool wasn't streamed progressively, add it now
                     return {
                       ...m,
                       parts: [
@@ -141,10 +174,10 @@ export function useChat({ chatId, cwd }: UseChatOptions) {
                 setMessages((prev) =>
                   updateLastAssistant(prev, assistantId, (m) => ({
                     ...m,
-                    parts: m.parts.map((p) =>
-                      p.type === 'tool-call' && p.toolCallId === chunk.toolCallId
-                        ? { ...p, output: chunk.output, state: 'done' as const }
-                        : p
+                    parts: m.parts.map((part) =>
+                      part.type === 'tool-call' && part.toolCallId === chunk.toolCallId
+                        ? { ...part, output: chunk.output, state: 'done' as const }
+                        : part
                     )
                   }))
                 )
@@ -154,10 +187,10 @@ export function useChat({ chatId, cwd }: UseChatOptions) {
                 setMessages((prev) =>
                   updateLastAssistant(prev, assistantId, (m) => ({
                     ...m,
-                    parts: m.parts.map((p) =>
-                      p.type === 'tool-call' && p.toolCallId === chunk.toolCallId
-                        ? { ...p, error: chunk.error, state: 'error' as const }
-                        : p
+                    parts: m.parts.map((part) =>
+                      part.type === 'tool-call' && part.toolCallId === chunk.toolCallId
+                        ? { ...part, error: chunk.error, state: 'error' as const }
+                        : part
                     )
                   }))
                 )
@@ -229,5 +262,5 @@ export function useChat({ chatId, cwd }: UseChatOptions) {
     sessionIdRef.current = undefined
   }, [abort])
 
-  return { messages, isStreaming, sendMessage, abort, reset }
+  return { messages, isStreaming, isLoading, sendMessage, abort, reset }
 }
