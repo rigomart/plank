@@ -1,7 +1,8 @@
-import { Loader2, SendHorizontal, Square } from 'lucide-react'
+import { SendHorizontal, Square } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useChat } from '../hooks/useChat'
 import type { Workspace } from '../types'
+import { MessageBubble } from './MessageBubble'
 import { Button } from './ui/button'
 import { ScrollArea } from './ui/scroll-area'
 
@@ -55,27 +56,11 @@ export function ChatPanel({ workspace, chatId }: ChatPanelProps): React.JSX.Elem
             </div>
           ) : (
             messages.map((msg) => (
-              <div
+              <MessageBubble
                 key={msg.id}
-                className={msg.role === 'user' ? 'flex justify-end' : 'flex justify-start'}
-              >
-                <div
-                  className={
-                    msg.role === 'user'
-                      ? 'max-w-[85%] rounded-lg bg-secondary px-3.5 py-2.5 text-sm text-secondary-foreground'
-                      : 'max-w-[85%] text-sm text-card-foreground'
-                  }
-                >
-                  {msg.role === 'assistant' && !msg.content && isStreaming ? (
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <Loader2 className="size-3.5 animate-spin" />
-                      <span className="text-xs">Thinking...</span>
-                    </div>
-                  ) : (
-                    <div className="whitespace-pre-wrap break-words">{msg.content}</div>
-                  )}
-                </div>
-              </div>
+                message={msg}
+                isStreaming={isStreaming && msg === messages[messages.length - 1]}
+              />
             ))
           )}
           <div ref={bottomRef} />

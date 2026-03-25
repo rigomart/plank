@@ -15,10 +15,24 @@ export interface Workspace {
   repo: RepoInfo | null
 }
 
+export type ToolCallState = 'streaming-input' | 'running' | 'done' | 'error'
+
+export type MessagePart =
+  | { type: 'text'; id: string; text: string }
+  | {
+      type: 'tool-call'
+      toolCallId: string
+      toolName: string
+      input: string
+      output?: string
+      error?: string
+      state: ToolCallState
+    }
+
 export interface ChatMessage {
   id: string
   role: 'user' | 'assistant'
-  content: string
+  parts: MessagePart[]
   sessionId?: string
   usage?: { inputTokens: number; outputTokens: number }
   costUsd?: number
