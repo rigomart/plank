@@ -1,10 +1,10 @@
+import type { SDKMessage } from '@anthropic-ai/claude-agent-sdk'
 import type { ChatChunk } from './types'
 
 export function createTransformer() {
   let textStarted = false
 
-  // biome-ignore lint/suspicious/noExplicitAny: SDK messages are untyped
-  return function* transform(msg: any): Generator<ChatChunk> {
+  return function* transform(msg: SDKMessage): Generator<ChatChunk> {
     if (msg.type === 'stream_event') {
       const event = msg.event
       if (!event) return
@@ -34,8 +34,6 @@ export function createTransformer() {
           : undefined,
         costUsd: msg.total_cost_usd ?? undefined
       }
-    } else if (msg.type === 'error') {
-      yield { type: 'error', message: msg.error?.message ?? msg.message ?? 'Unknown error' }
     }
   }
 }

@@ -61,8 +61,7 @@ export async function* streamChat(
     for await (const msg of stream) {
       if (abortController.signal.aborted) break
 
-      // biome-ignore lint/suspicious/noExplicitAny: SDK messages are untyped
-      for (const chunk of transform(msg as any)) {
+      for (const chunk of transform(msg)) {
         yield chunk
 
         // Track session ID from finish chunks

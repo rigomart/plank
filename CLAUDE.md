@@ -11,3 +11,4 @@
 - After finishing a change, run check and build
 - Do not run the dev environment, assume the user is already running it
 - We are using the react compiler, so avoid using optimizations like memoization with useMemo or useCallback
+- Avoid the use of `any` type and explicit type casting.
