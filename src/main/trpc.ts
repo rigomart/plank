@@ -104,6 +104,7 @@ export const appRouter = t.router({
 
         const assistantParts: unknown[] = []
         let currentText = ''
+        let currentThinking = ''
         let sessionId = input.sessionId ?? null
         let usage: StoredMessage['usage']
         let costUsd: number | undefined
@@ -113,6 +114,23 @@ export const appRouter = t.router({
 
           // Accumulate for persistence
           switch (chunk.type) {
+            case 'thinking-start':
+              currentThinking = ''
+              break
+            case 'thinking-delta':
+              currentThinking += chunk.delta
+              break
+            case 'thinking-end':
+              if (currentThinking) {
+                assistantParts.push({
+                  type: 'thinking',
+                  id: crypto.randomUUID(),
+                  text: currentThinking,
+                  isStreaming: false
+                })
+                currentThinking = ''
+              }
+              break
             case 'text-start':
               currentText = ''
               break

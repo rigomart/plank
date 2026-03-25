@@ -93,6 +93,42 @@ export function useChat({ chatId, cwd }: UseChatOptions) {
         {
           onData(chunk) {
             switch (chunk.type) {
+              case 'thinking-start':
+                setMessages((prev) =>
+                  updateLastAssistant(prev, assistantId, (m) => ({
+                    ...m,
+                    parts: [
+                      ...m.parts,
+                      { type: 'thinking', id: crypto.randomUUID(), text: '', isStreaming: true }
+                    ]
+                  }))
+                )
+                break
+
+              case 'thinking-delta':
+                setMessages((prev) =>
+                  updateLastAssistant(prev, assistantId, (m) => ({
+                    ...m,
+                    parts: m.parts.map((p) =>
+                      p.type === 'thinking' && p.isStreaming
+                        ? { ...p, text: p.text + chunk.delta }
+                        : p
+                    )
+                  }))
+                )
+                break
+
+              case 'thinking-end':
+                setMessages((prev) =>
+                  updateLastAssistant(prev, assistantId, (m) => ({
+                    ...m,
+                    parts: m.parts.map((p) =>
+                      p.type === 'thinking' && p.isStreaming ? { ...p, isStreaming: false } : p
+                    )
+                  }))
+                )
+                break
+
               case 'text-delta':
                 setMessages((prev) =>
                   updateLastAssistant(prev, assistantId, (m) => ({

@@ -20,6 +20,7 @@ function categorizeError(msg: string): ErrorCategory {
 
 export function createTransformer() {
   let textStarted = false
+  let thinkingStarted = false
   let currentToolCallId: string | null = null
   let currentToolName: string | null = null
   let accumulatedToolInput = ''
@@ -34,7 +35,10 @@ export function createTransformer() {
         const block = event.content_block
         if (!block) return
 
-        if (block.type === 'text') {
+        if (block.type === 'thinking') {
+          thinkingStarted = true
+          yield { type: 'thinking-start' }
+        } else if (block.type === 'text') {
           textStarted = true
           yield { type: 'text-start' }
         } else if (block.type === 'tool_use') {
@@ -48,7 +52,10 @@ export function createTransformer() {
         const delta = event.delta
         if (!delta) return
 
-        if (delta.type === 'text_delta' && delta.text) {
+        if (delta.type === 'thinking_delta' && thinkingStarted) {
+          const text = (delta as { thinking?: string }).thinking ?? ''
+          if (text) yield { type: 'thinking-delta', delta: text }
+        } else if (delta.type === 'text_delta' && delta.text) {
           yield { type: 'text-delta', delta: delta.text }
         } else if (delta.type === 'input_json_delta' && currentToolCallId) {
           const text = (delta as { partial_json?: string }).partial_json ?? ''
@@ -58,7 +65,10 @@ export function createTransformer() {
           }
         }
       } else if (event.type === 'content_block_stop') {
-        if (textStarted) {
+        if (thinkingStarted) {
+          thinkingStarted = false
+          yield { type: 'thinking-end' }
+        } else if (textStarted) {
           textStarted = false
           yield { type: 'text-end' }
         } else if (currentToolCallId && currentToolName) {

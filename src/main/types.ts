@@ -10,6 +10,10 @@ export type ChatChunk =
   | { type: 'text-start' }
   | { type: 'text-delta'; delta: string }
   | { type: 'text-end' }
+  // Thinking
+  | { type: 'thinking-start' }
+  | { type: 'thinking-delta'; delta: string }
+  | { type: 'thinking-end' }
   // Tool calls
   | { type: 'tool-input-start'; toolCallId: string; toolName: string }
   | { type: 'tool-input-delta'; toolCallId: string; delta: string }

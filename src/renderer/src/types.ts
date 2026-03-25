@@ -19,6 +19,7 @@ export type ToolCallState = 'streaming-input' | 'running' | 'done' | 'error'
 
 export type MessagePart =
   | { type: 'text'; id: string; text: string }
+  | { type: 'thinking'; id: string; text: string; isStreaming: boolean }
   | {
       type: 'tool-call'
       toolCallId: string

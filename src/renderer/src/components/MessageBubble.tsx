@@ -3,6 +3,7 @@ import { AlertCircle, Loader2 } from 'lucide-react'
 import { Streamdown } from 'streamdown'
 import type { ChatMessage, ErrorCategory } from '../types'
 import { MessageMetadata } from './MessageMetadata'
+import { ThinkingBlock } from './ThinkingBlock'
 import { ToolCallCard } from './ToolCallCard'
 
 const plugins = { code }
@@ -55,6 +56,10 @@ export function MessageBubble({ message, isStreaming }: MessageBubbleProps): Rea
     <div className="flex justify-start">
       <div className="max-w-[85%] space-y-2 text-sm text-card-foreground">
         {message.parts.map((part) => {
+          if (part.type === 'thinking') {
+            return <ThinkingBlock key={part.id} text={part.text} isStreaming={part.isStreaming} />
+          }
+
           if (part.type === 'text') {
             return (
               <Streamdown key={part.id} plugins={plugins} isAnimating={isStreaming}>
