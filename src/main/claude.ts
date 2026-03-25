@@ -72,10 +72,14 @@ export async function* streamChat(
       }
     }
   } catch (err) {
-    yield {
-      type: 'error' as const,
-      message: err instanceof Error ? err.message : String(err)
-    }
+    const msg = err instanceof Error ? err.message : String(err)
+    const lower = msg.toLowerCase()
+    const category = lower.includes('abort')
+      ? ('generic' as const)
+      : lower.includes('enoent') || lower.includes('not found')
+        ? ('auth' as const)
+        : ('generic' as const)
+    yield { type: 'error' as const, message: msg, category }
   } finally {
     activeSessions.delete(input.chatId)
   }

@@ -1,5 +1,22 @@
 import type { SDKMessage } from '@anthropic-ai/claude-agent-sdk'
-import type { ChatChunk } from './types'
+import type { ChatChunk, ErrorCategory } from './types'
+
+function categorizeError(msg: string): ErrorCategory {
+  const lower = msg.toLowerCase()
+  if (
+    lower.includes('not logged in') ||
+    lower.includes('authentication') ||
+    lower.includes('invalid_api_key') ||
+    lower.includes('invalid api key')
+  )
+    return 'auth'
+  if (lower.includes('rate_limit') || lower.includes('rate limit') || lower.includes('429'))
+    return 'rate-limit'
+  if (lower.includes('overloaded') || lower.includes('503')) return 'overloaded'
+  if (lower.includes('econnrefused') || lower.includes('fetch failed') || lower.includes('network'))
+    return 'network'
+  return 'generic'
+}
 
 export function createTransformer() {
   let textStarted = false
@@ -61,9 +78,18 @@ export function createTransformer() {
         }
       }
     } else if (msg.type === 'assistant') {
-      // Emit any tool_use blocks not already streamed (dedup)
       const content = msg.message?.content
       if (!Array.isArray(content)) return
+
+      // Check for assistant-level errors
+      if (msg.error) {
+        yield {
+          type: 'error',
+          message: String(msg.error),
+          category: categorizeError(String(msg.error))
+        }
+        return
+      }
 
       for (const block of content) {
         if (block.type === 'tool_use' && !emittedToolIds.has(block.id)) {
@@ -77,7 +103,6 @@ export function createTransformer() {
         }
       }
     } else if (msg.type === 'user') {
-      // Tool results come in user messages
       const content = msg.message?.content
       if (!Array.isArray(content)) return
 
@@ -94,6 +119,11 @@ export function createTransformer() {
         }
       }
     } else if (msg.type === 'result') {
+      if (msg.subtype !== 'success') {
+        const errors = 'errors' in msg ? (msg.errors as string[]) : []
+        const errorMsg = errors.join('; ') || 'Claude returned an error'
+        yield { type: 'error', message: errorMsg, category: categorizeError(errorMsg) }
+      }
       yield {
         type: 'finish',
         sessionId: msg.session_id ?? '',
@@ -103,7 +133,8 @@ export function createTransformer() {
               outputTokens: msg.usage.output_tokens ?? 0
             }
           : undefined,
-        costUsd: msg.total_cost_usd ?? undefined
+        costUsd: msg.total_cost_usd ?? undefined,
+        durationMs: msg.duration_ms ?? undefined
       }
     }
   }

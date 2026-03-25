@@ -203,7 +203,8 @@ export function useChat({ chatId, cwd }: UseChatOptions) {
                     ...m,
                     sessionId: chunk.sessionId,
                     usage: chunk.usage,
-                    costUsd: chunk.costUsd
+                    costUsd: chunk.costUsd,
+                    durationMs: chunk.durationMs
                   }))
                 )
                 setIsStreaming(false)
@@ -214,6 +215,7 @@ export function useChat({ chatId, cwd }: UseChatOptions) {
                 setMessages((prev) =>
                   updateLastAssistant(prev, assistantId, (m) => ({
                     ...m,
+                    error: { message: chunk.message, category: chunk.category },
                     parts:
                       m.parts.length > 0
                         ? m.parts

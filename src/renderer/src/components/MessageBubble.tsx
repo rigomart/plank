@@ -1,6 +1,19 @@
-import { Loader2 } from 'lucide-react'
-import type { ChatMessage } from '../types'
+import { code } from '@streamdown/code'
+import { AlertCircle, Loader2 } from 'lucide-react'
+import { Streamdown } from 'streamdown'
+import type { ChatMessage, ErrorCategory } from '../types'
+import { MessageMetadata } from './MessageMetadata'
 import { ToolCallCard } from './ToolCallCard'
+
+const plugins = { code }
+
+const ERROR_HINTS: Record<ErrorCategory, string> = {
+  auth: 'Run `claude login` in your terminal to authenticate.',
+  'rate-limit': 'You have hit the rate limit. Wait a moment and try again.',
+  overloaded: 'Claude is currently overloaded. Try again shortly.',
+  network: 'Could not connect. Check your internet connection.',
+  generic: ''
+}
 
 interface MessageBubbleProps {
   message: ChatMessage
@@ -44,9 +57,9 @@ export function MessageBubble({ message, isStreaming }: MessageBubbleProps): Rea
         {message.parts.map((part) => {
           if (part.type === 'text') {
             return (
-              <div key={part.id} className="whitespace-pre-wrap break-words">
+              <Streamdown key={part.id} plugins={plugins} isAnimating={isStreaming}>
                 {part.text}
-              </div>
+              </Streamdown>
             )
           }
 
@@ -62,6 +75,20 @@ export function MessageBubble({ message, isStreaming }: MessageBubbleProps): Rea
             />
           )
         })}
+        {message.error && (
+          <div className="flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2">
+            <AlertCircle className="mt-0.5 size-3.5 shrink-0 text-destructive" />
+            <div className="text-xs">
+              <div className="font-medium text-destructive">{message.error.message}</div>
+              {ERROR_HINTS[message.error.category] && (
+                <div className="mt-0.5 text-muted-foreground">
+                  {ERROR_HINTS[message.error.category]}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+        {!isStreaming && <MessageMetadata message={message} />}
       </div>
     </div>
   )

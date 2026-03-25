@@ -29,6 +29,8 @@ export type MessagePart =
       state: ToolCallState
     }
 
+export type ErrorCategory = 'auth' | 'rate-limit' | 'overloaded' | 'network' | 'generic'
+
 export interface ChatMessage {
   id: string
   role: 'user' | 'assistant'
@@ -36,4 +38,6 @@ export interface ChatMessage {
   sessionId?: string
   usage?: { inputTokens: number; outputTokens: number }
   costUsd?: number
+  durationMs?: number
+  error?: { message: string; category: ErrorCategory }
 }
