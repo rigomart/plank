@@ -1,33 +1,13 @@
 import { useCallback, useEffect, useState } from 'react'
-import type { Session } from '../App'
 import { trpc } from '../trpc'
-import type { GitHubIssue, RepoInfo, Workspace, WorkspaceEntry } from '../types'
+import type { RepoInfo, Workspace, WorkspaceEntry } from '../types'
+import { ChatPanel } from './ChatPanel'
 import { HeaderBar } from './HeaderBar'
-import { IssueSidebar } from './IssueSidebar'
-import { MainPanel } from './MainPanel'
 
-export function buildPrompt(issue: GitHubIssue): string {
-  const labels = issue.labels.map((l) => l.name).join(', ')
-  let prompt = `Issue #${issue.number}: ${issue.title}`
-  if (issue.body) prompt += `\n\n${issue.body}`
-  if (labels) prompt += `\n\nLabels: ${labels}`
-  return prompt
-}
-
-interface WorkbenchProps {
-  session: Session
-  onLogout: () => void
-}
-
-export function Workbench({ session, onLogout }: WorkbenchProps): React.JSX.Element {
+export function Workbench(): React.JSX.Element {
   const [workspace, setWorkspace] = useState<Workspace | null>(null)
-  const [issues, setIssues] = useState<GitHubIssue[]>([])
-  const [issuesLoading, setIssuesLoading] = useState(false)
-  const [activeIssue, setActiveIssue] = useState<GitHubIssue | null>(null)
-  const [selectedId, setSelectedId] = useState<number | null>(null)
-  const [exited, setExited] = useState(false)
-
   const [workspaces, setWorkspaces] = useState<WorkspaceEntry[]>([])
+  const [chatId, setChatId] = useState(() => crypto.randomUUID())
 
   useEffect(() => {
     trpc.workspace.list
@@ -46,20 +26,6 @@ export function Workbench({ session, onLogout }: WorkbenchProps): React.JSX.Elem
       .catch(() => {})
   }, [])
 
-  const currentRepo = workspace?.repo ?? null
-  useEffect(() => {
-    if (!currentRepo) {
-      setIssues([])
-      return
-    }
-    setIssuesLoading(true)
-    trpc.github.issues
-      .query({ owner: currentRepo.owner, repo: currentRepo.repo })
-      .then((i) => setIssues(i as GitHubIssue[]))
-      .catch(() => setIssues([]))
-      .finally(() => setIssuesLoading(false))
-  }, [currentRepo])
-
   const handleAddWorkspace = async (): Promise<void> => {
     try {
       const entry = await trpc.workspace.add.mutate()
@@ -70,7 +36,7 @@ export function Workbench({ session, onLogout }: WorkbenchProps): React.JSX.Elem
         return [...prev, ws]
       })
       setWorkspace({ folderPath: ws.folderPath, repo: ws.repo })
-      resetTerminalState()
+      setChatId(crypto.randomUUID())
     } catch {}
   }
 
@@ -80,54 +46,29 @@ export function Workbench({ session, onLogout }: WorkbenchProps): React.JSX.Elem
       folderPath: result.folderPath,
       repo: result.repo as RepoInfo | null
     })
-    resetTerminalState()
+    setChatId(crypto.randomUUID())
   }
 
-  const resetTerminalState = (): void => {
-    setActiveIssue(null)
-    setSelectedId(null)
-    setExited(false)
-  }
-
-  const handleLaunch = (issue: GitHubIssue): void => {
-    setActiveIssue(issue)
-    setSelectedId(issue.id)
-    setExited(false)
-  }
-
-  const handleExit = useCallback(() => setExited(true), [])
-  const handleClose = (): void => resetTerminalState()
-
-  const prompt = activeIssue ? buildPrompt(activeIssue) : null
+  const handleNewChat = useCallback(() => {
+    setChatId(crypto.randomUUID())
+  }, [])
 
   return (
     <div className="flex h-full w-full flex-col">
       <HeaderBar
         workspace={workspace}
         workspaces={workspaces}
-        session={session}
         onSelectWorkspace={handleSelectWorkspace}
         onAddWorkspace={handleAddWorkspace}
-        onNewSession={resetTerminalState}
-        onLogout={onLogout}
+        onNewChat={handleNewChat}
       />
-      <div className="flex min-h-0 flex-1">
-        <IssueSidebar
-          issues={issues}
-          issuesLoading={issuesLoading}
-          hasRepo={!!workspace?.repo}
-          selectedId={selectedId}
-          onSelectIssue={handleLaunch}
-        />
-        <MainPanel
-          workspace={workspace}
-          activeIssue={activeIssue}
-          prompt={prompt}
-          exited={exited}
-          onExit={handleExit}
-          onClose={handleClose}
-        />
-      </div>
+      {workspace ? (
+        <ChatPanel key={chatId} workspace={workspace} chatId={chatId} />
+      ) : (
+        <div className="flex flex-1 items-center justify-center">
+          <span className="text-sm text-muted-foreground">Select a workspace to get started</span>
+        </div>
+      )}
     </div>
   )
 }

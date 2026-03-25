@@ -1,7 +1,5 @@
-import { Check, ChevronDown, FolderOpen, GitFork, Lock, LogOut, Plus, Settings } from 'lucide-react'
-import type { Session } from '../App'
+import { Check, ChevronDown, FolderOpen, GitFork, Lock, Plus } from 'lucide-react'
 import type { Workspace, WorkspaceEntry } from '../types'
-import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar'
 import { Button } from './ui/button'
 import {
   DropdownMenu,
@@ -18,21 +16,17 @@ function folderName(path: string): string {
 interface HeaderBarProps {
   workspace: Workspace | null
   workspaces: WorkspaceEntry[]
-  session: Session
   onSelectWorkspace: (entry: WorkspaceEntry) => void
   onAddWorkspace: () => void
-  onNewSession: () => void
-  onLogout: () => void
+  onNewChat: () => void
 }
 
 export function HeaderBar({
   workspace,
   workspaces,
-  session,
   onSelectWorkspace,
   onAddWorkspace,
-  onNewSession,
-  onLogout
+  onNewChat
 }: HeaderBarProps): React.JSX.Element {
   const noDrag = { WebkitAppRegion: 'no-drag' } as React.CSSProperties
 
@@ -45,7 +39,7 @@ export function HeaderBar({
         <div className="flex size-6 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
           P
         </div>
-        <span className="text-sm font-medium text-card-foreground">Planner</span>
+        <span className="text-sm font-medium text-card-foreground">Plank</span>
         <span className="text-sm text-muted-foreground">/</span>
 
         <DropdownMenu>
@@ -97,33 +91,10 @@ export function HeaderBar({
       </div>
 
       <div className="flex items-center gap-2" style={noDrag}>
-        <Button variant="outline" size="sm" className="gap-1.5" onClick={onNewSession}>
+        <Button variant="outline" size="sm" className="gap-1.5" onClick={onNewChat}>
           <Plus className="size-3.5" />
-          New Session
+          New Chat
         </Button>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon-sm">
-              <Settings className="size-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48">
-            <div className="flex items-center gap-2.5 px-2 py-1.5">
-              <Avatar size="sm">
-                <AvatarImage src={session.user.avatar_url} alt={session.user.login} />
-                <AvatarFallback>{session.user.login[0]}</AvatarFallback>
-              </Avatar>
-              <span className="truncate text-xs text-muted-foreground">
-                {session.user.name || session.user.login}
-              </span>
-            </div>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem className="gap-2.5" onSelect={onLogout}>
-              <LogOut className="size-3.5" />
-              <span className="text-[13px]">Sign out</span>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
       </div>
     </header>
   )

@@ -11,7 +11,7 @@ files:
   - '!{tsconfig.json,tsconfig.node.json,tsconfig.web.json}'
 asarUnpack:
   - resources/**
-  - node_modules/node-pty/**
+  - node_modules/@anthropic-ai/**
 win:
   executableName: plank
 nsis:

@@ -8,7 +8,7 @@ export default defineConfig({
     envPrefix: 'GITHUB_',
     build: {
       rollupOptions: {
-        external: ['node-pty']
+        external: ['@anthropic-ai/claude-agent-sdk']
       }
     }
   },

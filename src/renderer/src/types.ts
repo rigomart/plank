@@ -15,10 +15,11 @@ export interface Workspace {
   repo: RepoInfo | null
 }
 
-export interface GitHubIssue {
-  id: number
-  number: number
-  title: string
-  body: string | null
-  labels: Array<{ name: string; color: string }>
+export interface ChatMessage {
+  id: string
+  role: 'user' | 'assistant'
+  content: string
+  sessionId?: string
+  usage?: { inputTokens: number; outputTokens: number }
+  costUsd?: number
 }
