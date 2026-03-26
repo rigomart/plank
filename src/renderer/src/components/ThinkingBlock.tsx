@@ -1,14 +1,17 @@
-import { Brain, ChevronRight, Loader2 } from 'lucide-react'
-import { useState } from 'react'
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collapsible'
+import { Brain, ChevronRight, Loader2 } from "lucide-react";
+import { useState } from "react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "./ui/collapsible";
 
 interface ThinkingBlockProps {
-  text: string
-  isStreaming: boolean
+  text: string;
+  isStreaming: boolean;
 }
 
-export function ThinkingBlock({ text, isStreaming }: ThinkingBlockProps): React.JSX.Element {
-  const [open, setOpen] = useState(false)
+export function ThinkingBlock({
+  text,
+  isStreaming,
+}: ThinkingBlockProps): React.JSX.Element {
+  const [open, setOpen] = useState(false);
 
   return (
     <Collapsible open={open} onOpenChange={setOpen}>
@@ -18,7 +21,7 @@ export function ThinkingBlock({ text, isStreaming }: ThinkingBlockProps): React.
           className="flex w-full cursor-pointer items-center gap-2 rounded-md border border-border bg-card px-3 py-2 text-left transition-colors hover:bg-accent"
         >
           <ChevronRight
-            className={`size-3 shrink-0 text-muted-foreground transition-transform ${open ? 'rotate-90' : ''}`}
+            className={`size-3 shrink-0 text-muted-foreground transition-transform ${open ? "rotate-90" : ""}`}
           />
           <Brain className="size-3.5 shrink-0 text-muted-foreground" />
           <span className="text-xs font-medium text-card-foreground">Thinking</span>
@@ -39,5 +42,5 @@ export function ThinkingBlock({ text, isStreaming }: ThinkingBlockProps): React.
         </div>
       </CollapsibleContent>
     </Collapsible>
-  )
+  );
 }

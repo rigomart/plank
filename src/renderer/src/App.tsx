@@ -1,7 +1,7 @@
-import { Workbench } from './components/Workbench'
+import { Workbench } from "./components/Workbench";
 
 function App(): React.JSX.Element {
-  return <Workbench />
+  return <Workbench />;
 }
 
-export default App
+export default App;

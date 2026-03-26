@@ -1,35 +1,38 @@
-import { code } from '@streamdown/code'
-import { AlertCircle, Loader2 } from 'lucide-react'
-import { Streamdown } from 'streamdown'
-import type { ChatMessage, ErrorCategory } from '../types'
-import { MessageMetadata } from './MessageMetadata'
-import { ThinkingBlock } from './ThinkingBlock'
-import { ToolCallCard } from './ToolCallCard'
+import { code } from "@streamdown/code";
+import { AlertCircle, Loader2 } from "lucide-react";
+import { Streamdown } from "streamdown";
+import type { ChatMessage, ErrorCategory } from "../types";
+import { MessageMetadata } from "./MessageMetadata";
+import { ThinkingBlock } from "./ThinkingBlock";
+import { ToolCallCard } from "./ToolCallCard";
 
-const plugins = { code }
+const plugins = { code };
 
 const ERROR_HINTS: Record<ErrorCategory, string> = {
-  auth: 'Run `claude login` in your terminal to authenticate.',
-  'rate-limit': 'You have hit the rate limit. Wait a moment and try again.',
-  overloaded: 'Claude is currently overloaded. Try again shortly.',
-  network: 'Could not connect. Check your internet connection.',
-  generic: ''
-}
+  auth: "Run `claude login` in your terminal to authenticate.",
+  "rate-limit": "You have hit the rate limit. Wait a moment and try again.",
+  overloaded: "Claude is currently overloaded. Try again shortly.",
+  network: "Could not connect. Check your internet connection.",
+  generic: "",
+};
 
 interface MessageBubbleProps {
-  message: ChatMessage
-  isStreaming: boolean
+  message: ChatMessage;
+  isStreaming: boolean;
 }
 
-export function MessageBubble({ message, isStreaming }: MessageBubbleProps): React.JSX.Element {
-  const isUser = message.role === 'user'
-  const isEmpty = message.parts.length === 0
+export function MessageBubble({
+  message,
+  isStreaming,
+}: MessageBubbleProps): React.JSX.Element {
+  const isUser = message.role === "user";
+  const isEmpty = message.parts.length === 0;
 
   if (isUser) {
     const text = message.parts
-      .filter((p) => p.type === 'text')
+      .filter((p) => p.type === "text")
       .map((p) => p.text)
-      .join('')
+      .join("");
 
     return (
       <div className="flex justify-end">
@@ -37,7 +40,7 @@ export function MessageBubble({ message, isStreaming }: MessageBubbleProps): Rea
           <div className="whitespace-pre-wrap break-words">{text}</div>
         </div>
       </div>
-    )
+    );
   }
 
   // Assistant message
@@ -49,23 +52,29 @@ export function MessageBubble({ message, isStreaming }: MessageBubbleProps): Rea
           <span className="text-xs">Thinking...</span>
         </div>
       </div>
-    )
+    );
   }
 
   return (
     <div className="flex justify-start">
       <div className="max-w-[85%] space-y-2 text-sm text-card-foreground">
         {message.parts.map((part) => {
-          if (part.type === 'thinking') {
-            return <ThinkingBlock key={part.id} text={part.text} isStreaming={part.isStreaming} />
+          if (part.type === "thinking") {
+            return (
+              <ThinkingBlock
+                key={part.id}
+                text={part.text}
+                isStreaming={part.isStreaming}
+              />
+            );
           }
 
-          if (part.type === 'text') {
+          if (part.type === "text") {
             return (
               <Streamdown key={part.id} plugins={plugins} isAnimating={isStreaming}>
                 {part.text}
               </Streamdown>
-            )
+            );
           }
 
           return (
@@ -78,7 +87,7 @@ export function MessageBubble({ message, isStreaming }: MessageBubbleProps): Rea
               error={part.error}
               state={part.state}
             />
-          )
+          );
         })}
         {message.error && (
           <div className="flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2">
@@ -96,5 +105,5 @@ export function MessageBubble({ message, isStreaming }: MessageBubbleProps): Rea
         {!isStreaming && <MessageMetadata message={message} />}
       </div>
     </div>
-  )
+  );
 }

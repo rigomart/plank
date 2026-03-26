@@ -1,3 +1,3 @@
 interface ImportMetaEnv {
-  readonly GITHUB_CLIENT_ID: string
+  readonly GITHUB_CLIENT_ID: string;
 }

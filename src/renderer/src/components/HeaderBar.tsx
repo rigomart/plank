@@ -1,24 +1,24 @@
-import { Check, ChevronDown, FolderOpen, GitFork, Lock, Plus } from 'lucide-react'
-import type { Workspace, WorkspaceEntry } from '../types'
-import { Button } from './ui/button'
+import { Check, ChevronDown, FolderOpen, GitFork, Lock, Plus } from "lucide-react";
+import type { Workspace, WorkspaceEntry } from "../types";
+import { Button } from "./ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
-  DropdownMenuTrigger
-} from './ui/dropdown-menu'
+  DropdownMenuTrigger,
+} from "./ui/dropdown-menu";
 
 function folderName(path: string): string {
-  return path.split('/').pop() || path
+  return path.split("/").pop() || path;
 }
 
 interface HeaderBarProps {
-  workspace: Workspace | null
-  workspaces: WorkspaceEntry[]
-  onSelectWorkspace: (entry: WorkspaceEntry) => void
-  onAddWorkspace: () => void
-  onNewChat: () => void
+  workspace: Workspace | null;
+  workspaces: WorkspaceEntry[];
+  onSelectWorkspace: (entry: WorkspaceEntry) => void;
+  onAddWorkspace: () => void;
+  onNewChat: () => void;
 }
 
 export function HeaderBar({
@@ -26,14 +26,14 @@ export function HeaderBar({
   workspaces,
   onSelectWorkspace,
   onAddWorkspace,
-  onNewChat
+  onNewChat,
 }: HeaderBarProps): React.JSX.Element {
-  const noDrag = { WebkitAppRegion: 'no-drag' } as React.CSSProperties
+  const noDrag = { WebkitAppRegion: "no-drag" } as React.CSSProperties;
 
   return (
     <header
       className="flex h-11 shrink-0 items-center justify-between border-b border-border bg-card px-3"
-      style={{ WebkitAppRegion: 'drag' } as React.CSSProperties}
+      style={{ WebkitAppRegion: "drag" } as React.CSSProperties}
     >
       <div className="flex items-center gap-2" style={noDrag}>
         <div className="flex size-6 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
@@ -51,7 +51,7 @@ export function HeaderBar({
               <GitFork className="size-3.5 text-muted-foreground" />
               <span className="text-sm text-card-foreground">
                 {workspace?.repo?.fullName ||
-                  (workspace ? folderName(workspace.folderPath) : 'Select workspace')}
+                  (workspace ? folderName(workspace.folderPath) : "Select workspace")}
               </span>
               <Lock className="size-3 text-muted-foreground" />
               <ChevronDown className="size-3 text-muted-foreground" />
@@ -59,13 +59,13 @@ export function HeaderBar({
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="w-64">
             {workspaces.map((entry) => {
-              const isActive = entry.folderPath === workspace?.folderPath
+              const isActive = entry.folderPath === workspace?.folderPath;
               return (
                 <DropdownMenuItem
                   key={entry.folderPath}
                   className="flex items-center gap-2.5"
                   onSelect={() => {
-                    if (!isActive) onSelectWorkspace(entry)
+                    if (!isActive) onSelectWorkspace(entry);
                   }}
                 >
                   <FolderOpen className="size-3.5 shrink-0 text-muted-foreground" />
@@ -74,12 +74,12 @@ export function HeaderBar({
                       {folderName(entry.folderPath)}
                     </div>
                     <div className="truncate text-[11px] text-muted-foreground">
-                      {entry.repo?.fullName || 'No remote'}
+                      {entry.repo?.fullName || "No remote"}
                     </div>
                   </div>
                   {isActive && <Check className="size-3 shrink-0" />}
                 </DropdownMenuItem>
-              )
+              );
             })}
             <DropdownMenuSeparator />
             <DropdownMenuItem className="gap-2.5" onSelect={onAddWorkspace}>
@@ -97,5 +97,5 @@ export function HeaderBar({
         </Button>
       </div>
     </header>
-  )
+  );
 }

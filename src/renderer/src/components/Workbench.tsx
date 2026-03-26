@@ -1,67 +1,69 @@
-import { useCallback, useEffect, useState } from 'react'
-import { trpc } from '../trpc'
-import type { RepoInfo, Workspace, WorkspaceEntry } from '../types'
-import { ChatPanel } from './ChatPanel'
-import { ChatSidebar } from './ChatSidebar'
-import { HeaderBar } from './HeaderBar'
+import { useCallback, useEffect, useState } from "react";
+import { trpc } from "../trpc";
+import type { RepoInfo, Workspace, WorkspaceEntry } from "../types";
+import { ChatPanel } from "./ChatPanel";
+import { ChatSidebar } from "./ChatSidebar";
+import { HeaderBar } from "./HeaderBar";
 
 export function Workbench(): React.JSX.Element {
-  const [workspace, setWorkspace] = useState<Workspace | null>(null)
-  const [workspaces, setWorkspaces] = useState<WorkspaceEntry[]>([])
-  const [chatId, setChatId] = useState<string | null>(null)
+  const [workspace, setWorkspace] = useState<Workspace | null>(null);
+  const [workspaces, setWorkspaces] = useState<WorkspaceEntry[]>([]);
+  const [chatId, setChatId] = useState<string | null>(null);
 
   useEffect(() => {
     trpc.workspace.list
       .query()
       .then((data) => {
-        setWorkspaces(data.workspaces as WorkspaceEntry[])
+        setWorkspaces(data.workspaces as WorkspaceEntry[]);
         if (data.lastUsedPath) {
           const entry = (data.workspaces as WorkspaceEntry[]).find(
-            (w) => w.folderPath === data.lastUsedPath
-          )
+            (w) => w.folderPath === data.lastUsedPath,
+          );
           if (entry) {
-            setWorkspace({ folderPath: entry.folderPath, repo: entry.repo })
+            setWorkspace({ folderPath: entry.folderPath, repo: entry.repo });
           }
         }
       })
-      .catch(() => {})
-  }, [])
+      .catch(() => {});
+  }, []);
 
   const handleNewChat = useCallback(() => {
-    if (!workspace) return
-    const id = crypto.randomUUID()
+    if (!workspace) return;
+    const id = crypto.randomUUID();
     trpc.claude.createChat
       .mutate({ id, workspacePath: workspace.folderPath })
       .then(() => setChatId(id))
-      .catch(() => {})
-  }, [workspace])
+      .catch(() => {});
+  }, [workspace]);
 
   const handleSelectChat = useCallback((id: string) => {
-    setChatId(id)
-  }, [])
+    setChatId(id);
+  }, []);
 
   const handleAddWorkspace = async (): Promise<void> => {
     try {
-      const entry = await trpc.workspace.add.mutate()
-      if (!entry) return
-      const ws = entry as WorkspaceEntry
+      const entry = await trpc.workspace.add.mutate();
+      if (!entry) return;
+      const ws = entry as WorkspaceEntry;
       setWorkspaces((prev) => {
-        if (prev.some((w) => w.folderPath === ws.folderPath)) return prev
-        return [...prev, ws]
-      })
-      setWorkspace({ folderPath: ws.folderPath, repo: ws.repo })
-      setChatId(null)
+        if (prev.some((w) => w.folderPath === ws.folderPath)) return prev;
+        return [...prev, ws];
+      });
+      setWorkspace({ folderPath: ws.folderPath, repo: ws.repo });
+      setChatId(null);
     } catch {}
-  }
+  };
 
   const handleSelectWorkspace = async (entry: WorkspaceEntry): Promise<void> => {
-    const result = await trpc.workspace.setActive.mutate({ folderPath: entry.folderPath })
+    const result = await trpc.workspace.setActive.mutate({
+      folderPath: entry.folderPath,
+    });
     setWorkspace({
       folderPath: result.folderPath,
-      repo: result.repo as RepoInfo | null
-    })
-    setChatId(null)
-  }
+      repo: result.repo as RepoInfo | null,
+    });
+    setChatId(null);
+  };
 
   return (
     <div className="flex h-full w-full flex-col">
@@ -92,9 +94,11 @@ export function Workbench(): React.JSX.Element {
         </div>
       ) : (
         <div className="flex flex-1 items-center justify-center">
-          <span className="text-sm text-muted-foreground">Select a workspace to get started</span>
+          <span className="text-sm text-muted-foreground">
+            Select a workspace to get started
+          </span>
         </div>
       )}
     </div>
-  )
+  );
 }

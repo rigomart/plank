@@ -1,21 +1,21 @@
-import { MessageSquare, Plus, Trash2 } from 'lucide-react'
-import { useEffect, useState } from 'react'
-import { trpc } from '../trpc'
-import type { Workspace } from '../types'
-import { Button } from './ui/button'
-import { ScrollArea } from './ui/scroll-area'
+import { MessageSquare, Plus, Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { trpc } from "../trpc";
+import type { Workspace } from "../types";
+import { Button } from "./ui/button";
+import { ScrollArea } from "./ui/scroll-area";
 
 interface ChatSummary {
-  id: string
-  name: string
-  updatedAt: string
+  id: string;
+  name: string;
+  updatedAt: string;
 }
 
 interface ChatSidebarProps {
-  workspace: Workspace
-  activeChatId: string | null
-  onSelectChat: (chatId: string) => void
-  onNewChat: () => void
+  workspace: Workspace;
+  activeChatId: string | null;
+  onSelectChat: (chatId: string) => void;
+  onNewChat: () => void;
 }
 
 function fetchChats(workspacePath: string): Promise<ChatSummary[]> {
@@ -25,34 +25,34 @@ function fetchChats(workspacePath: string): Promise<ChatSummary[]> {
       list.map((c) => ({
         id: c.id,
         name: c.name,
-        updatedAt: c.updatedAt
-      }))
+        updatedAt: c.updatedAt,
+      })),
     )
-    .catch(() => [])
+    .catch(() => []);
 }
 
 export function ChatSidebar({
   workspace,
   activeChatId,
   onSelectChat,
-  onNewChat
+  onNewChat,
 }: ChatSidebarProps): React.JSX.Element {
-  const [chats, setChats] = useState<ChatSummary[]>([])
+  const [chats, setChats] = useState<ChatSummary[]>([]);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: activeChatId triggers refresh after chat name updates
   useEffect(() => {
-    fetchChats(workspace.folderPath).then(setChats)
-  }, [workspace.folderPath, activeChatId])
+    fetchChats(workspace.folderPath).then(setChats);
+  }, [workspace.folderPath, activeChatId]);
 
   const handleDelete = (chatId: string, e: React.MouseEvent) => {
-    e.stopPropagation()
+    e.stopPropagation();
     trpc.claude.deleteChat.mutate({ chatId }).then(() => {
-      fetchChats(workspace.folderPath).then(setChats)
+      fetchChats(workspace.folderPath).then(setChats);
       if (chatId === activeChatId) {
-        onNewChat()
+        onNewChat();
       }
-    })
-  }
+    });
+  };
 
   return (
     <aside className="flex w-56 shrink-0 flex-col border-r border-border bg-card">
@@ -71,8 +71,8 @@ export function ChatSidebar({
               onClick={() => onSelectChat(chat.id)}
               className={`group flex w-full cursor-pointer items-center gap-2 rounded-md px-2.5 py-2 text-left transition-colors ${
                 chat.id === activeChatId
-                  ? 'bg-accent text-accent-foreground'
-                  : 'text-muted-foreground hover:bg-accent/50 hover:text-card-foreground'
+                  ? "bg-accent text-accent-foreground"
+                  : "text-muted-foreground hover:bg-accent/50 hover:text-card-foreground"
               }`}
             >
               <MessageSquare className="size-3.5 shrink-0" />
@@ -95,5 +95,5 @@ export function ChatSidebar({
         </div>
       </ScrollArea>
     </aside>
-  )
+  );
 }

@@ -9,9 +9,13 @@ files:
   - '!{.eslintcache,eslint.config.mjs,.prettierignore,.prettierrc.yaml,dev-app-update.yml,CHANGELOG.md,README.md}'
   - '!{.env,.env.*,.npmrc,pnpm-lock.yaml}'
   - '!{tsconfig.json,tsconfig.node.json,tsconfig.web.json}'
+extraResources:
+  - from: resources/migrations
+    to: migrations
 asarUnpack:
   - resources/**
   - node_modules/@anthropic-ai/**
+  - node_modules/better-sqlite3/**
 win:
   executableName: plank
 nsis:

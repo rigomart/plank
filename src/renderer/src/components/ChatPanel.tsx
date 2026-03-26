@@ -1,60 +1,61 @@
-import { SendHorizontal, Square } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
-import { DEFAULT_MODEL, MODELS } from '../../../main/models'
-import { useChat } from '../hooks/useChat'
-import { trpc } from '../trpc'
-import type { Workspace } from '../types'
-import { MessageBubble } from './MessageBubble'
-import { ModelSelector } from './ModelSelector'
-import { Button } from './ui/button'
-import { ScrollArea } from './ui/scroll-area'
+import { SendHorizontal, Square } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { DEFAULT_MODEL, MODELS } from "../../main/models";
+import { useChat } from "../hooks/useChat";
+import { trpc } from "../trpc";
+import type { Workspace } from "../types";
+import { MessageBubble } from "./MessageBubble";
+import { ModelSelector } from "./ModelSelector";
+import { Button } from "./ui/button";
+import { ScrollArea } from "./ui/scroll-area";
+import { Textarea } from "./ui/textarea";
 
 interface ChatPanelProps {
-  workspace: Workspace
-  chatId: string
+  workspace: Workspace;
+  chatId: string;
 }
 
 export function ChatPanel({ workspace, chatId }: ChatPanelProps): React.JSX.Element {
-  const [model, setModel] = useState(DEFAULT_MODEL)
+  const [model, setModel] = useState(DEFAULT_MODEL);
   const { messages, isStreaming, sendMessage, abort } = useChat({
     chatId,
     cwd: workspace.folderPath,
-    model
-  })
-  const [input, setInput] = useState('')
-  const bottomRef = useRef<HTMLDivElement>(null)
-  const inputRef = useRef<HTMLTextAreaElement>(null)
+    model,
+  });
+  const [input, setInput] = useState("");
+  const bottomRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
 
   // Load persisted model from chat data
   useEffect(() => {
     trpc.claude.getChat
       .query({ chatId })
       .then((chat) => {
-        if (chat?.model) setModel(chat.model)
+        if (chat?.model) setModel(chat.model);
       })
-      .catch(() => {})
-  }, [chatId])
+      .catch(() => {});
+  }, [chatId]);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
-  })
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  });
 
   useEffect(() => {
-    inputRef.current?.focus()
-  }, [])
+    inputRef.current?.focus();
+  }, []);
 
   const handleSubmit = () => {
-    if (!input.trim() || isStreaming) return
-    sendMessage(input)
-    setInput('')
-  }
+    if (!input.trim() || isStreaming) return;
+    sendMessage(input);
+    setInput("");
+  };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault()
-      handleSubmit()
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSubmit();
     }
-  }
+  };
 
   return (
     <main className="flex flex-1 flex-col overflow-hidden bg-background">
@@ -82,21 +83,10 @@ export function ChatPanel({ workspace, chatId }: ChatPanelProps): React.JSX.Elem
         </div>
       </ScrollArea>
 
-      <div className="shrink-0 border-t border-border bg-card px-4 py-3">
-        <div className="mx-auto max-w-3xl">
-          <div className="flex items-center pb-1.5">
-            <ModelSelector
-              models={MODELS}
-              value={model}
-              onValueChange={(value) => {
-                setModel(value)
-                trpc.claude.updateChatModel.mutate({ chatId, model: value }).catch(() => {})
-              }}
-              disabled={isStreaming}
-            />
-          </div>
+      <div className="shrink-0 px-4 py-3">
+        <div className="mx-auto max-w-3xl flex flex-col gap-2">
           <div className="flex items-end gap-2">
-            <textarea
+            <Textarea
               ref={inputRef}
               className="max-h-32 min-h-[36px] flex-1 resize-none rounded-md border border-input bg-background px-3 py-2 text-sm text-card-foreground outline-none placeholder:text-muted-foreground/50 focus:border-ring"
               placeholder="Message Claude..."
@@ -121,8 +111,21 @@ export function ChatPanel({ workspace, chatId }: ChatPanelProps): React.JSX.Elem
               </Button>
             )}
           </div>
+          <div className="flex items-center">
+            <ModelSelector
+              models={MODELS}
+              value={model}
+              onValueChange={(value) => {
+                setModel(value);
+                trpc.claude.updateChatModel
+                  .mutate({ chatId, model: value })
+                  .catch(() => {});
+              }}
+              disabled={isStreaming}
+            />
+          </div>
         </div>
       </div>
     </main>
-  )
+  );
 }
