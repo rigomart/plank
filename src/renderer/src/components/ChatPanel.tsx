@@ -1,8 +1,11 @@
 import { SendHorizontal, Square } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
+import { DEFAULT_MODEL, MODELS } from '../../../main/models'
 import { useChat } from '../hooks/useChat'
+import { trpc } from '../trpc'
 import type { Workspace } from '../types'
 import { MessageBubble } from './MessageBubble'
+import { ModelSelector } from './ModelSelector'
 import { Button } from './ui/button'
 import { ScrollArea } from './ui/scroll-area'
 
@@ -12,13 +15,25 @@ interface ChatPanelProps {
 }
 
 export function ChatPanel({ workspace, chatId }: ChatPanelProps): React.JSX.Element {
+  const [model, setModel] = useState(DEFAULT_MODEL)
   const { messages, isStreaming, sendMessage, abort } = useChat({
     chatId,
-    cwd: workspace.folderPath
+    cwd: workspace.folderPath,
+    model
   })
   const [input, setInput] = useState('')
   const bottomRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
+
+  // Load persisted model from chat data
+  useEffect(() => {
+    trpc.claude.getChat
+      .query({ chatId })
+      .then((chat) => {
+        if (chat?.model) setModel(chat.model)
+      })
+      .catch(() => {})
+  }, [chatId])
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -68,31 +83,44 @@ export function ChatPanel({ workspace, chatId }: ChatPanelProps): React.JSX.Elem
       </ScrollArea>
 
       <div className="shrink-0 border-t border-border bg-card px-4 py-3">
-        <div className="mx-auto flex max-w-3xl items-end gap-2">
-          <textarea
-            ref={inputRef}
-            className="max-h-32 min-h-[36px] flex-1 resize-none rounded-md border border-input bg-background px-3 py-2 text-sm text-card-foreground outline-none placeholder:text-muted-foreground/50 focus:border-ring"
-            placeholder="Message Claude..."
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            rows={1}
-          />
-          {isStreaming ? (
-            <Button variant="outline" size="icon-sm" onClick={abort} title="Stop">
-              <Square className="size-3.5" />
-            </Button>
-          ) : (
-            <Button
-              variant="outline"
-              size="icon-sm"
-              onClick={handleSubmit}
-              disabled={!input.trim()}
-              title="Send"
-            >
-              <SendHorizontal className="size-3.5" />
-            </Button>
-          )}
+        <div className="mx-auto max-w-3xl">
+          <div className="flex items-center pb-1.5">
+            <ModelSelector
+              models={MODELS}
+              value={model}
+              onValueChange={(value) => {
+                setModel(value)
+                trpc.claude.updateChatModel.mutate({ chatId, model: value }).catch(() => {})
+              }}
+              disabled={isStreaming}
+            />
+          </div>
+          <div className="flex items-end gap-2">
+            <textarea
+              ref={inputRef}
+              className="max-h-32 min-h-[36px] flex-1 resize-none rounded-md border border-input bg-background px-3 py-2 text-sm text-card-foreground outline-none placeholder:text-muted-foreground/50 focus:border-ring"
+              placeholder="Message Claude..."
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+              rows={1}
+            />
+            {isStreaming ? (
+              <Button variant="outline" size="icon-sm" onClick={abort} title="Stop">
+                <Square className="size-3.5" />
+              </Button>
+            ) : (
+              <Button
+                variant="outline"
+                size="icon-sm"
+                onClick={handleSubmit}
+                disabled={!input.trim()}
+                title="Send"
+              >
+                <SendHorizontal className="size-3.5" />
+              </Button>
+            )}
+          </div>
         </div>
       </div>
     </main>

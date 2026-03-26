@@ -20,6 +20,7 @@ export interface ChatInput {
   prompt: string
   cwd: string
   sessionId?: string
+  model?: string
 }
 
 export async function* streamChat(
@@ -52,6 +53,7 @@ export async function* streamChat(
         permissionMode: 'bypassPermissions',
         allowDangerouslySkipPermissions: true,
         includePartialMessages: true,
+        ...(input.model ? { model: input.model } : {}),
         // Resume existing session, or start fresh (no continue = new session)
         ...(sessionId ? { resume: sessionId, continue: true } : {})
       }

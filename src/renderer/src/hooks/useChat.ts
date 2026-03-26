@@ -5,6 +5,7 @@ import type { ChatMessage, MessagePart } from '../types'
 interface UseChatOptions {
   chatId: string
   cwd: string
+  model?: string
 }
 
 function updateLastAssistant(
@@ -23,7 +24,7 @@ function appendText(parts: MessagePart[], delta: string): MessagePart[] {
   return [...parts, { type: 'text', id: crypto.randomUUID(), text: delta }]
 }
 
-export function useChat({ chatId, cwd }: UseChatOptions) {
+export function useChat({ chatId, cwd, model }: UseChatOptions) {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [isStreaming, setIsStreaming] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
@@ -88,6 +89,7 @@ export function useChat({ chatId, cwd }: UseChatOptions) {
           prompt: text.trim(),
           cwd,
           sessionId: sessionIdRef.current,
+          model,
           messages: currentMessages
         },
         {
@@ -285,7 +287,7 @@ export function useChat({ chatId, cwd }: UseChatOptions) {
         }
       )
     },
-    [chatId, cwd, isStreaming]
+    [chatId, cwd, isStreaming, model]
   )
 
   const abort = useCallback(() => {

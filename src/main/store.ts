@@ -18,6 +18,7 @@ export interface ChatEntry {
   workspacePath: string
   name: string
   sessionId: string | null
+  model?: string
   messages: StoredMessage[]
   createdAt: string
   updatedAt: string
@@ -72,6 +73,15 @@ export function createChat(id: string, workspacePath: string): ChatEntry {
 export function deleteChat(chatId: string): void {
   const store = load()
   store.chats = store.chats.filter((c) => c.id !== chatId)
+  save(store)
+}
+
+export function updateChatModel(chatId: string, model: string): void {
+  const store = load()
+  const chat = store.chats.find((c) => c.id === chatId)
+  if (!chat) return
+  chat.model = model
+  chat.updatedAt = new Date().toISOString()
   save(store)
 }
 

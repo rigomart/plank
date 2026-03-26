@@ -10,7 +10,8 @@ import {
   getChat,
   listChats,
   type StoredMessage,
-  saveMessages
+  saveMessages,
+  updateChatModel
 } from './store'
 import {
   addWorkspace,
@@ -79,6 +80,12 @@ export const appRouter = t.router({
       deleteChat(input.chatId)
     }),
 
+    updateChatModel: t.procedure
+      .input(z.object({ chatId: z.string(), model: z.string() }))
+      .mutation(({ input }) => {
+        updateChatModel(input.chatId, input.model)
+      }),
+
     chat: t.procedure
       .input(
         z.object({
@@ -86,6 +93,7 @@ export const appRouter = t.router({
           prompt: z.string(),
           cwd: z.string(),
           sessionId: z.string().optional(),
+          model: z.string().optional(),
           messages: z.array(z.unknown()).optional()
         })
       )
