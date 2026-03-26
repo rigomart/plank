@@ -1,6 +1,6 @@
 import { SendHorizontal, Square } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { DEFAULT_MODEL, MODELS } from "../../main/models";
+import { DEFAULT_MODEL, MODELS } from "../../../main/models";
 import { useChat } from "../hooks/useChat";
 import { trpc } from "../trpc";
 import type { Workspace } from "../types";
