@@ -1,9 +1,8 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { trpc } from "../trpc";
-import type { RepoInfo, Workspace, WorkspaceEntry } from "../types";
+import type { Workspace, WorkspaceEntry } from "../types";
 import { ChatPanel } from "./chat";
-import { HeaderBar } from "./layout/header-bar";
 import { ChatSidebar } from "./sidebar";
 
 export function Workbench(): React.JSX.Element {
@@ -26,16 +25,24 @@ export function Workbench(): React.JSX.Element {
     },
   });
 
-  const handleNewChat = () => {
-    if (!workspace) return;
-    const id = crypto.randomUUID();
-    trpc.claude.createChat
-      .mutate({ id, workspacePath: workspace.folderPath })
-      .then(() => setChatId(id));
+  const handleSelectChat = (workspacePath: string, id: string) => {
+    const entry = workspaces.find((w) => w.folderPath === workspacePath);
+    if (entry) {
+      setWorkspace({ folderPath: entry.folderPath, repo: entry.repo });
+    }
+    setChatId(id);
   };
 
-  const handleSelectChat = (id: string) => {
-    setChatId(id);
+  const handleNewChat = (workspacePath: string) => {
+    const entry = workspaces.find((w) => w.folderPath === workspacePath);
+    if (entry) {
+      setWorkspace({ folderPath: entry.folderPath, repo: entry.repo });
+    }
+    const id = crypto.randomUUID();
+    trpc.claude.createChat.mutate({ id, workspacePath }).then(() => {
+      setChatId(id);
+      queryClient.invalidateQueries({ queryKey: ["chats", workspacePath] });
+    });
   };
 
   const handleAddWorkspace = async (): Promise<void> => {
@@ -50,51 +57,28 @@ export function Workbench(): React.JSX.Element {
     setChatId(null);
   };
 
-  const handleSelectWorkspace = async (entry: WorkspaceEntry): Promise<void> => {
-    const result = await trpc.workspace.setActive.mutate({
-      folderPath: entry.folderPath,
-    });
-    setWorkspace({
-      folderPath: result.folderPath,
-      repo: result.repo as RepoInfo | null,
-    });
-    setChatId(null);
-  };
-
   return (
     <div className="flex h-full w-full flex-col">
-      <HeaderBar
-        workspace={workspace}
-        workspaces={workspaces}
-        onSelectWorkspace={handleSelectWorkspace}
-        onAddWorkspace={handleAddWorkspace}
-        onNewChat={handleNewChat}
-      />
-      {workspace ? (
-        <div className="flex min-h-0 flex-1">
-          <ChatSidebar
-            workspace={workspace}
-            activeChatId={chatId}
-            onSelectChat={handleSelectChat}
-            onNewChat={handleNewChat}
-          />
-          {chatId ? (
-            <ChatPanel key={chatId} workspace={workspace} chatId={chatId} />
-          ) : (
-            <div className="flex flex-1 items-center justify-center">
-              <span className="text-sm text-muted-foreground">
-                Select a chat or start a new one
-              </span>
-            </div>
-          )}
-        </div>
-      ) : (
-        <div className="flex flex-1 items-center justify-center">
-          <span className="text-sm text-muted-foreground">
-            Select a workspace to get started
-          </span>
-        </div>
-      )}
+      <div className="flex min-h-0 flex-1">
+        <ChatSidebar
+          workspaces={workspaces}
+          activeChatId={chatId}
+          onSelectChat={handleSelectChat}
+          onNewChat={handleNewChat}
+          onAddWorkspace={handleAddWorkspace}
+        />
+        {workspace && chatId ? (
+          <ChatPanel key={chatId} workspace={workspace} chatId={chatId} />
+        ) : (
+          <div className="flex flex-1 items-center justify-center">
+            <span className="text-sm text-muted-foreground">
+              {workspaces.length === 0
+                ? "Add a workspace to get started"
+                : "Select a chat or start a new one"}
+            </span>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

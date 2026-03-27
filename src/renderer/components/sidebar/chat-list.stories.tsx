@@ -10,10 +10,11 @@ const meta: Meta<typeof ChatList> = {
     onSelectChat: fn(),
     onDeleteChat: fn(),
     onNewChat: fn(),
+    onAddWorkspace: fn(),
   },
   decorators: [
     (Story) => (
-      <div className="h-[400px]">
+      <div className="h-[500px]">
         <Story />
       </div>
     ),
@@ -23,31 +24,50 @@ const meta: Meta<typeof ChatList> = {
 export default meta;
 type Story = StoryObj<typeof ChatList>;
 
-export const WithChats: Story = {
+export const WithWorkspaces: Story = {
   args: {
     activeChatId: "2",
-    chats: [
-      { id: "1", name: "Set up Storybook" },
-      { id: "2", name: "Refactor ChatPanel" },
-      { id: "3", name: "Fix build errors" },
-      { id: "4", name: "Add dark mode support" },
+    workspaces: [
+      {
+        folderPath: "/Users/dev/projects/plank",
+        name: "plank",
+        repoFullName: "dev/plank",
+        chats: [
+          { id: "1", name: "Set up Storybook" },
+          { id: "2", name: "Refactor ChatPanel" },
+          { id: "3", name: "Fix build errors" },
+        ],
+      },
+      {
+        folderPath: "/Users/dev/projects/other-app",
+        name: "other-app",
+        repoFullName: "dev/other-app",
+        chats: [
+          { id: "4", name: "Add authentication" },
+          { id: "5", name: "Database migrations" },
+        ],
+      },
     ],
   },
 };
 
-export const Empty: Story = {
+export const EmptyWorkspace: Story = {
   args: {
     activeChatId: null,
-    chats: [],
+    workspaces: [
+      {
+        folderPath: "/Users/dev/projects/new-project",
+        name: "new-project",
+        repoFullName: null,
+        chats: [],
+      },
+    ],
   },
 };
 
-export const ManyChats: Story = {
+export const NoWorkspaces: Story = {
   args: {
-    activeChatId: "1",
-    chats: Array.from({ length: 20 }, (_, i) => ({
-      id: String(i + 1),
-      name: `Chat conversation #${i + 1}`,
-    })),
+    activeChatId: null,
+    workspaces: [],
   },
 };

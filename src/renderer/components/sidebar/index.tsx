@@ -1,51 +1,61 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueries, useQueryClient } from "@tanstack/react-query";
 import { trpc } from "../../trpc";
-import type { Workspace } from "../../types";
+import type { WorkspaceEntry } from "../../types";
 import { ChatList } from "./chat-list";
 
+function folderName(path: string): string {
+  return path.split("/").pop() || path;
+}
+
 interface ChatSidebarProps {
-  workspace: Workspace;
+  workspaces: WorkspaceEntry[];
   activeChatId: string | null;
-  onSelectChat: (chatId: string) => void;
-  onNewChat: () => void;
+  onSelectChat: (workspacePath: string, chatId: string) => void;
+  onNewChat: (workspacePath: string) => void;
+  onAddWorkspace: () => void;
 }
 
 export function ChatSidebar({
-  workspace,
+  workspaces,
   activeChatId,
   onSelectChat,
   onNewChat,
+  onAddWorkspace,
 }: ChatSidebarProps): React.JSX.Element {
   const queryClient = useQueryClient();
-  const queryKey = ["chats", workspace.folderPath, activeChatId];
 
-  const { data: chats = [] } = useQuery({
-    queryKey,
-    queryFn: () =>
-      trpc.claude.listChats
-        .query({ workspacePath: workspace.folderPath })
-        .then((list) =>
-          list.map((c) => ({ id: c.id, name: c.name, updatedAt: c.updatedAt })),
-        ),
+  const chatQueries = useQueries({
+    queries: workspaces.map((ws) => ({
+      queryKey: ["chats", ws.folderPath, activeChatId],
+      queryFn: () =>
+        trpc.claude.listChats
+          .query({ workspacePath: ws.folderPath })
+          .then((list) => list.map((c) => ({ id: c.id, name: c.name }))),
+    })),
   });
 
-  const handleDelete = (chatId: string, e: React.MouseEvent) => {
+  const workspacesWithChats = workspaces.map((ws, i) => ({
+    folderPath: ws.folderPath,
+    name: folderName(ws.folderPath),
+    repoFullName: ws.repo?.fullName ?? null,
+    chats: chatQueries[i].data ?? [],
+  }));
+
+  const handleDelete = (workspacePath: string, chatId: string, e: React.MouseEvent) => {
     e.stopPropagation();
     trpc.claude.deleteChat.mutate({ chatId }).then(() => {
-      queryClient.invalidateQueries({ queryKey });
-      if (chatId === activeChatId) {
-        onNewChat();
-      }
+      queryClient.invalidateQueries({ queryKey: ["chats", workspacePath] });
     });
   };
 
   return (
     <ChatList
-      chats={chats}
+      workspaces={workspacesWithChats}
       activeChatId={activeChatId}
       onSelectChat={onSelectChat}
       onDeleteChat={handleDelete}
       onNewChat={onNewChat}
+      onAddWorkspace={onAddWorkspace}
     />
   );
 }
