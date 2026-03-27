@@ -1,4 +1,4 @@
-import { SendHorizontal, Square } from "lucide-react";
+import { ArrowUp, Square } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type { ModelOption } from "../../../main/models";
 import { Button } from "../ui/button";
@@ -44,11 +44,11 @@ export function ChatInput({
 
   return (
     <div className="shrink-0 px-4 py-3">
-      <div className="mx-auto flex max-w-3xl flex-col gap-2 rounded-md border p-2">
-        <div className="flex items-end gap-2">
+      <div className="mx-auto flex max-w-3xl flex-col gap-2 rounded-xl border p-3">
+        <div className="flex items-end gap-1">
           <Textarea
             ref={inputRef}
-            className="max-h-32 min-h-[36px] resize-none border-none shadow-none focus-visible:ring-0"
+            className="max-h-32 min-h-[36px] resize-none border-none shadow-none focus-visible:ring-0 p-0"
             placeholder="Message Claude..."
             value={input}
             onChange={(e) => setInput(e.target.value)}
@@ -64,18 +64,17 @@ export function ChatInput({
             disabled={isStreaming}
           />
           {isStreaming ? (
-            <Button variant="outline" size="icon-sm" onClick={onAbort} title="Stop">
-              <Square className="size-3.5" />
+            <Button size="icon-sm" onClick={onAbort} title="Stop">
+              <Square className="size-4" />
             </Button>
           ) : (
             <Button
-              variant="outline"
-              size="icon"
+              size="icon-sm"
               onClick={handleSubmit}
               disabled={!input.trim()}
               title="Send"
             >
-              <SendHorizontal className="size-3.5" />
+              <ArrowUp className="size-4" />
             </Button>
           )}
         </div>

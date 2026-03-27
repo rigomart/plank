@@ -37,7 +37,7 @@ export function MessageBubble({
     return (
       <div className="flex justify-end">
         <div className="max-w-[85%] rounded-lg bg-secondary px-3.5 py-2.5 text-sm text-secondary-foreground">
-          <div className="whitespace-pre-wrap break-words">{text}</div>
+          <div className="whitespace-pre-wrap wrap-break-word">{text}</div>
         </div>
       </div>
     );
@@ -56,8 +56,8 @@ export function MessageBubble({
   }
 
   return (
-    <div className="flex justify-start">
-      <div className="max-w-[85%] space-y-2 text-sm text-card-foreground">
+    <div className="flex w-full">
+      <div className="w-[85%] space-y-2 text-sm text-card-foreground">
         {message.parts.map((part) => {
           if (part.type === "thinking") {
             return (

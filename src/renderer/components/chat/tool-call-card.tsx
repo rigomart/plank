@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import type { ToolCallState } from "../../types";
+import { Button } from "../ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../ui/collapsible";
 
 const TOOL_ICONS: Record<string, typeof Terminal> = {
@@ -73,22 +74,20 @@ export function ToolCallCard({
   return (
     <Collapsible open={open} onOpenChange={setOpen}>
       <CollapsibleTrigger asChild>
-        <button
-          type="button"
-          className="flex w-full cursor-pointer items-center gap-2 rounded-md border border-border bg-card px-3 py-2 text-left transition-colors hover:bg-accent"
-        >
-          <ChevronRight
-            className={`size-3 shrink-0 text-muted-foreground transition-transform ${open ? "rotate-90" : ""}`}
-          />
+        <Button variant="ghost" size="sm" className="w-full">
           <Icon className="size-3.5 shrink-0 text-muted-foreground" />
           <span className="text-xs font-medium text-card-foreground">{toolName}</span>
+          <StateIcon state={state} />
+
           {summary && (
             <span className="min-w-0 flex-1 truncate text-xs text-muted-foreground">
               {summary}
             </span>
           )}
-          <StateIcon state={state} />
-        </button>
+          <ChevronRight
+            className={`size-3 shrink-0 text-muted-foreground transition-transform ${open ? "rotate-90" : ""}`}
+          />
+        </Button>
       </CollapsibleTrigger>
       <CollapsibleContent>
         <div className="mt-1 space-y-2 rounded-md border border-border bg-background px-3 py-2">

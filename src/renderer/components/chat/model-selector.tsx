@@ -30,20 +30,20 @@ export function ModelSelector({
         <Button
           variant="ghost"
           size="xs"
-          className="gap-1 text-xs text-muted-foreground"
+          className="gap-1 text-sm text-muted-foreground"
           disabled={disabled}
         >
           {current?.displayName ?? value}
           <ChevronDown className="size-3" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent side="top" align="start" className="w-48">
+      <DropdownMenuContent side="top" align="start">
         <DropdownMenuRadioGroup value={value} onValueChange={onValueChange}>
           {models.map((model) => (
             <DropdownMenuRadioItem
               key={model.value}
               value={model.value}
-              className="text-[13px]"
+              className="text-sm"
             >
               {model.displayName}
             </DropdownMenuRadioItem>

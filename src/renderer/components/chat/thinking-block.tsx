@@ -1,6 +1,8 @@
-import { Brain, ChevronRight, Loader2 } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { useState } from "react";
+import { Button } from "../ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../ui/collapsible";
+import { LoadingGrid } from "../ui/loading-grid";
 
 interface ThinkingBlockProps {
   text: string;
@@ -16,27 +18,17 @@ export function ThinkingBlock({
   return (
     <Collapsible open={open} onOpenChange={setOpen}>
       <CollapsibleTrigger asChild>
-        <button
-          type="button"
-          className="flex w-full cursor-pointer items-center gap-2 rounded-md border border-border bg-card px-3 py-2 text-left transition-colors hover:bg-accent"
-        >
+        <Button variant="ghost" size="xs" className="w-full justify-start">
+          {isStreaming && <LoadingGrid className="size-3 text-muted-foreground" />}
+          <span className="text-sm font-medium text-muted-foreground">Thinking</span>
           <ChevronRight
             className={`size-3 shrink-0 text-muted-foreground transition-transform ${open ? "rotate-90" : ""}`}
           />
-          <Brain className="size-3.5 shrink-0 text-muted-foreground" />
-          <span className="text-xs font-medium text-card-foreground">Thinking</span>
-          {isStreaming ? (
-            <Loader2 className="ml-auto size-3 animate-spin text-muted-foreground" />
-          ) : (
-            <span className="ml-auto text-[10px] text-muted-foreground">
-              {text.length.toLocaleString()} chars
-            </span>
-          )}
-        </button>
+        </Button>
       </CollapsibleTrigger>
       <CollapsibleContent>
-        <div className="mt-1 rounded-md border border-border bg-background px-3 py-2">
-          <pre className="max-h-64 overflow-auto whitespace-pre-wrap text-[11px] leading-relaxed text-muted-foreground">
+        <div className="rounded-md bg-background p-2">
+          <pre className="max-h-64 overflow-auto whitespace-pre-wrap text-xs leading-relaxed text-muted-foreground">
             {text}
           </pre>
         </div>
