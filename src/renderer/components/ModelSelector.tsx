@@ -1,5 +1,5 @@
 import { ChevronDown } from "lucide-react";
-import type { ModelOption } from "../../../main/models";
+import type { ModelOption } from "../../main/models";
 import { Button } from "./ui/button";
 import {
   DropdownMenu,

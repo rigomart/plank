@@ -5,7 +5,7 @@ import {
   type TRPCLink,
 } from "@trpc/client";
 import { observable } from "@trpc/server/observable";
-import type { AppRouter } from "../../main/trpc";
+import type { AppRouter } from "../main/trpc";
 
 type TrpcEvent = { id: string; type: string; data?: unknown; error?: string };
 
