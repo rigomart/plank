@@ -1,4 +1,5 @@
-import "@fontsource-variable/inter";
+import "@fontsource-variable/dm-sans";
+import "@fontsource/dm-mono";
 import "./assets/main.css";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";

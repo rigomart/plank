@@ -1,6 +1,7 @@
 import type { Preview } from "@storybook/react-vite";
 
-import "@fontsource-variable/inter";
+import "@fontsource-variable/dm-sans";
+import "@fontsource/dm-mono";
 import "../src/renderer/assets/main.css";
 
 const preview: Preview = {

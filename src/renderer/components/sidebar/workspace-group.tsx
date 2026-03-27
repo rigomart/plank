@@ -1,4 +1,4 @@
-import { ChevronRight, GitFork, Plus } from "lucide-react";
+import { ChevronRight, Plus } from "lucide-react";
 import { useState } from "react";
 import { Button } from "../ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../ui/collapsible";
@@ -40,8 +40,7 @@ export function WorkspaceGroup({
             />
           </Button>
         </CollapsibleTrigger>
-        <GitFork className="size-3 shrink-0 text-muted-foreground" />
-        <span className="min-w-0 flex-1 truncate text-sm font-medium text-card-foreground">
+        <span className="min-w-0 flex-1 truncate text-sm font-semibold text-card-foreground">
           {repoFullName || name}
         </span>
         <Button
