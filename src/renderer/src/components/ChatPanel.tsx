@@ -84,34 +84,19 @@ export function ChatPanel({ workspace, chatId }: ChatPanelProps): React.JSX.Elem
       </ScrollArea>
 
       <div className="shrink-0 px-4 py-3">
-        <div className="mx-auto max-w-3xl flex flex-col gap-2">
+        <div className="mx-auto max-w-3xl flex flex-col gap-2 border p-2 rounded-md">
           <div className="flex items-end gap-2">
             <Textarea
               ref={inputRef}
-              className="max-h-32 min-h-[36px] flex-1 resize-none rounded-md border border-input bg-background px-3 py-2 text-sm text-card-foreground outline-none placeholder:text-muted-foreground/50 focus:border-ring"
+              className="max-h-32 min-h-[36px] border-none resize-none shadow-none focus-visible:ring-0"
               placeholder="Message Claude..."
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
               rows={1}
             />
-            {isStreaming ? (
-              <Button variant="outline" size="icon-sm" onClick={abort} title="Stop">
-                <Square className="size-3.5" />
-              </Button>
-            ) : (
-              <Button
-                variant="outline"
-                size="icon-sm"
-                onClick={handleSubmit}
-                disabled={!input.trim()}
-                title="Send"
-              >
-                <SendHorizontal className="size-3.5" />
-              </Button>
-            )}
           </div>
-          <div className="flex items-center">
+          <div className="flex items-center gap-2 justify-between">
             <ModelSelector
               models={MODELS}
               value={model}
@@ -123,6 +108,21 @@ export function ChatPanel({ workspace, chatId }: ChatPanelProps): React.JSX.Elem
               }}
               disabled={isStreaming}
             />
+            {isStreaming ? (
+              <Button variant="outline" size="icon-sm" onClick={abort} title="Stop">
+                <Square className="size-3.5" />
+              </Button>
+            ) : (
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={handleSubmit}
+                disabled={!input.trim()}
+                title="Send"
+              >
+                <SendHorizontal className="size-3.5" />
+              </Button>
+            )}
           </div>
         </div>
       </div>
