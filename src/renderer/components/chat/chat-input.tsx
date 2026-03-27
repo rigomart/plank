@@ -48,7 +48,7 @@ export function ChatInput({
         <div className="flex items-end gap-1">
           <Textarea
             ref={inputRef}
-            className="max-h-32 min-h-[36px] resize-none border-none shadow-none focus-visible:ring-0 p-0"
+            className="max-h-32 min-h-[36px] resize-none border-none shadow-none focus-visible:ring-0 p-0 rounded-none"
             placeholder="Message Claude..."
             value={input}
             onChange={(e) => setInput(e.target.value)}

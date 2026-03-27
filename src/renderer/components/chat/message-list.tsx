@@ -15,9 +15,10 @@ export function MessageList({
 }: MessageListProps): React.JSX.Element {
   const bottomRef = useRef<HTMLDivElement>(null);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: scroll when messages change
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  });
+  }, [messages]);
 
   return (
     <ScrollArea className="min-h-0 flex-1">

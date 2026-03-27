@@ -36,7 +36,7 @@ export function MessageBubble({
 
     return (
       <div className="flex justify-end">
-        <div className="max-w-[85%] rounded-2xl rounded-br-sm bg-secondary px-4 py-2 text-md text-secondary-foreground border border-primary/5">
+        <div className="max-w-[85%] rounded-3xl rounded-br-sm bg-secondary px-3 py-1.5 text-md text-secondary-foreground border border-primary/5">
           <div className="whitespace-pre-wrap wrap-break-word">{text}</div>
         </div>
       </div>

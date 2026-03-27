@@ -1,4 +1,4 @@
-import { Workbench } from "./components/Workbench";
+import { Workbench } from "./components/workbench";
 
 function App(): React.JSX.Element {
   return <Workbench />;

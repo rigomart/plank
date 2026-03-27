@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 import { DEFAULT_MODEL, MODELS } from "../../../main/models";
 import { useChat } from "../../hooks/useChat";
 import { trpc } from "../../trpc";
@@ -13,20 +14,21 @@ interface ChatPanelProps {
 
 export function ChatPanel({ workspace, chatId }: ChatPanelProps): React.JSX.Element {
   const [model, setModel] = useState(DEFAULT_MODEL);
+
+  useQuery({
+    queryKey: ["chat-model", chatId],
+    queryFn: async () => {
+      const chat = await trpc.claude.getChat.query({ chatId });
+      if (chat?.model) setModel(chat.model);
+      return chat?.model ?? DEFAULT_MODEL;
+    },
+  });
+
   const { messages, isStreaming, sendMessage, abort } = useChat({
     chatId,
     cwd: workspace.folderPath,
     model,
   });
-
-  useEffect(() => {
-    trpc.claude.getChat
-      .query({ chatId })
-      .then((chat) => {
-        if (chat?.model) setModel(chat.model);
-      })
-      .catch(() => {});
-  }, [chatId]);
 
   return (
     <main className="flex flex-1 flex-col overflow-hidden bg-background">

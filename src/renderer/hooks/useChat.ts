@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useCallback, useRef, useState } from "react";
 import { trpc } from "../trpc";
 import type { ChatMessage, MessagePart } from "../types";
 
@@ -27,38 +28,31 @@ function appendText(parts: MessagePart[], delta: string): MessagePart[] {
 export function useChat({ chatId, cwd, model }: UseChatOptions) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isStreaming, setIsStreaming] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
   const unsubRef = useRef<{ unsubscribe: () => void } | null>(null);
   const sessionIdRef = useRef<string | undefined>(undefined);
   const messagesRef = useRef<ChatMessage[]>([]);
 
-  // Keep ref in sync with state
-  useEffect(() => {
-    messagesRef.current = messages;
-  }, [messages]);
+  messagesRef.current = messages;
 
-  // Load existing messages from persistence
-  useEffect(() => {
-    setIsLoading(true);
-    trpc.claude.getChat
-      .query({ chatId })
-      .then((chat) => {
-        if (chat?.messages?.length) {
-          setMessages(chat.messages as ChatMessage[]);
-          const lastAssistant = [...chat.messages]
-            .reverse()
-            .find((m) => m.role === "assistant");
-          if (lastAssistant?.sessionId) {
-            sessionIdRef.current = lastAssistant.sessionId;
-          }
-          if (chat.sessionId) {
-            sessionIdRef.current = chat.sessionId;
-          }
+  const { isLoading } = useQuery({
+    queryKey: ["chat-messages", chatId],
+    queryFn: async () => {
+      const chat = await trpc.claude.getChat.query({ chatId });
+      if (chat?.messages?.length) {
+        setMessages(chat.messages as ChatMessage[]);
+        const lastAssistant = [...chat.messages]
+          .reverse()
+          .find((m) => m.role === "assistant");
+        if (lastAssistant?.sessionId) {
+          sessionIdRef.current = lastAssistant.sessionId;
         }
-      })
-      .catch(() => {})
-      .finally(() => setIsLoading(false));
-  }, [chatId]);
+        if (chat.sessionId) {
+          sessionIdRef.current = chat.sessionId;
+        }
+      }
+      return chat;
+    },
+  });
 
   const sendMessage = useCallback(
     (text: string) => {
