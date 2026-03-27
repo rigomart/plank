@@ -29,6 +29,6 @@ export function MessageMetadata({
   if (durationMs != null) parts.push(formatDuration(durationMs));
 
   return (
-    <div className="mt-1 text-[10px] text-muted-foreground">{parts.join(" · ")}</div>
+    <div className="mt-1 text-xs text-muted-foreground px-2">{parts.join(" · ")}</div>
   );
 }

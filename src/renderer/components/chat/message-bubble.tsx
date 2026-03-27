@@ -2,7 +2,7 @@ import { code } from "@streamdown/code";
 import { AlertCircle, Loader2 } from "lucide-react";
 import { Streamdown } from "streamdown";
 import type { ChatMessage, ErrorCategory } from "../../types";
-import { MessageMetadata } from "./message-metadata";
+import { MessageActions } from "./message-actions";
 import { ThinkingBlock } from "./thinking-block";
 import { ToolCallCard } from "./tool-call-card";
 
@@ -36,7 +36,7 @@ export function MessageBubble({
 
     return (
       <div className="flex justify-end">
-        <div className="max-w-[85%] rounded-lg bg-secondary px-3.5 py-2.5 text-sm text-secondary-foreground">
+        <div className="max-w-[85%] rounded-2xl rounded-br-sm bg-secondary px-4 py-2 text-md text-secondary-foreground border border-primary/5">
           <div className="whitespace-pre-wrap wrap-break-word">{text}</div>
         </div>
       </div>
@@ -71,9 +71,11 @@ export function MessageBubble({
 
           if (part.type === "text") {
             return (
-              <Streamdown key={part.id} plugins={plugins} isAnimating={isStreaming}>
-                {part.text}
-              </Streamdown>
+              <div className="px-2">
+                <Streamdown key={part.id} plugins={plugins} isAnimating={isStreaming}>
+                  {part.text}
+                </Streamdown>
+              </div>
             );
           }
 
@@ -102,7 +104,7 @@ export function MessageBubble({
             </div>
           </div>
         )}
-        {!isStreaming && <MessageMetadata message={message} />}
+        {!isStreaming && <MessageActions message={message} />}
       </div>
     </div>
   );
