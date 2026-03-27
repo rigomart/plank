@@ -9,8 +9,8 @@ import {
   Terminal,
 } from "lucide-react";
 import { useState } from "react";
-import type { ToolCallState } from "../types";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "./ui/collapsible";
+import type { ToolCallState } from "../../types";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../ui/collapsible";
 
 const TOOL_ICONS: Record<string, typeof Terminal> = {
   Bash: Terminal,

@@ -1,13 +1,13 @@
 import { ChevronDown } from "lucide-react";
-import type { ModelOption } from "../../main/models";
-import { Button } from "./ui/button";
+import type { ModelOption } from "../../../main/models";
+import { Button } from "../ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
-} from "./ui/dropdown-menu";
+} from "../ui/dropdown-menu";
 
 interface ModelSelectorProps {
   models: ModelOption[];

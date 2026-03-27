@@ -1,4 +1,4 @@
-import type { ChatMessage } from "../types";
+import type { ChatMessage } from "../../types";
 
 function formatDuration(ms: number): string {
   if (ms < 1000) return `${ms}ms`;

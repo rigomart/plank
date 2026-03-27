@@ -1,6 +1,6 @@
 import { Brain, ChevronRight, Loader2 } from "lucide-react";
 import { useState } from "react";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "./ui/collapsible";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../ui/collapsible";
 
 interface ThinkingBlockProps {
   text: string;

@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { trpc } from "../trpc";
 import type { RepoInfo, Workspace, WorkspaceEntry } from "../types";
-import { ChatPanel } from "./ChatPanel";
 import { ChatSidebar } from "./ChatSidebar";
+import { ChatPanel } from "./chat";
 import { HeaderBar } from "./HeaderBar";
 
 export function Workbench(): React.JSX.Element {

@@ -1,10 +1,10 @@
 import { code } from "@streamdown/code";
 import { AlertCircle, Loader2 } from "lucide-react";
 import { Streamdown } from "streamdown";
-import type { ChatMessage, ErrorCategory } from "../types";
-import { MessageMetadata } from "./MessageMetadata";
-import { ThinkingBlock } from "./ThinkingBlock";
-import { ToolCallCard } from "./ToolCallCard";
+import type { ChatMessage, ErrorCategory } from "../../types";
+import { MessageMetadata } from "./message-metadata";
+import { ThinkingBlock } from "./thinking-block";
+import { ToolCallCard } from "./tool-call-card";
 
 const plugins = { code };
 
