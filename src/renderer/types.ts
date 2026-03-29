@@ -28,6 +28,10 @@ export type MessagePart =
       output?: string;
       error?: string;
       state: ToolCallState;
+      children?: MessagePart[];
+      subagentStatus?: "running" | "completed" | "failed" | "stopped";
+      subagentSummary?: string;
+      subagentDescription?: string;
     };
 
 export type ErrorCategory = "auth" | "rate-limit" | "overloaded" | "network" | "generic";

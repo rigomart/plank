@@ -39,7 +39,7 @@ function toolSummary(toolName: string, input: string): string {
   return "";
 }
 
-function StateIcon({ state }: { state: ToolCallState }) {
+export function StateIcon({ state }: { state: ToolCallState }) {
   switch (state) {
     case "streaming-input":
     case "running":

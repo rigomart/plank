@@ -3,6 +3,7 @@ import { AlertCircle, Loader2 } from "lucide-react";
 import { Streamdown } from "streamdown";
 import type { ChatMessage, ErrorCategory } from "../../types";
 import { MessageActions } from "./message-actions";
+import { SubagentCard } from "./subagent-card";
 import { ThinkingBlock } from "./thinking-block";
 import { ToolCallCard } from "./tool-call-card";
 
@@ -76,6 +77,22 @@ export function MessageBubble({
                   {part.text}
                 </Streamdown>
               </div>
+            );
+          }
+
+          if (part.children) {
+            return (
+              <SubagentCard
+                key={part.toolCallId}
+                toolCallId={part.toolCallId}
+                description={part.subagentDescription}
+                summary={part.subagentSummary}
+                status={part.subagentStatus}
+                input={part.input}
+                output={part.output}
+              >
+                {part.children}
+              </SubagentCard>
             );
           }
 

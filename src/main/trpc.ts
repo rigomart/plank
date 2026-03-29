@@ -21,6 +21,40 @@ import {
   setLastUsed,
 } from "./workspace";
 
+interface ToolPartRecord {
+  type: string;
+  toolCallId: string;
+  toolName?: string;
+  input?: string;
+  output?: string;
+  error?: string;
+  state: string;
+  children?: ToolPartRecord[];
+  subagentStatus?: string;
+  subagentDescription?: string;
+  subagentSummary?: string;
+}
+
+function findToolPart(parts: unknown[], toolCallId: string): ToolPartRecord | undefined {
+  return parts.find(
+    (p): p is ToolPartRecord =>
+      typeof p === "object" &&
+      p !== null &&
+      "toolCallId" in p &&
+      (p as ToolPartRecord).toolCallId === toolCallId,
+  );
+}
+
+function findToolPartInChildren(
+  parts: unknown[],
+  parentToolCallId: string,
+  childToolCallId: string,
+): ToolPartRecord | undefined {
+  const parent = findToolPart(parts, parentToolCallId);
+  if (!parent?.children) return undefined;
+  return parent.children.find((c) => c.toolCallId === childToolCallId);
+}
+
 const t = initTRPC.create();
 
 export const appRouter = t.router({
@@ -165,39 +199,69 @@ export const appRouter = t.router({
               }
               break;
             case "tool-input-available":
-              assistantParts.push({
-                type: "tool-call",
-                toolCallId: chunk.toolCallId,
-                toolName: chunk.toolName,
-                input: JSON.stringify(chunk.input, null, 2),
-                state: "running",
-              });
+              if (chunk.parentToolUseId) {
+                const parent = findToolPart(assistantParts, chunk.parentToolUseId);
+                if (parent) {
+                  parent.children ??= [];
+                  parent.children.push({
+                    type: "tool-call",
+                    toolCallId: chunk.toolCallId,
+                    toolName: chunk.toolName,
+                    input: JSON.stringify(chunk.input, null, 2),
+                    state: "running",
+                  });
+                }
+              } else {
+                assistantParts.push({
+                  type: "tool-call",
+                  toolCallId: chunk.toolCallId,
+                  toolName: chunk.toolName,
+                  input: JSON.stringify(chunk.input, null, 2),
+                  state: "running",
+                });
+              }
               break;
             case "tool-output-available": {
-              const tool = assistantParts.find(
-                (p): p is { toolCallId: string; output?: string; state: string } =>
-                  typeof p === "object" &&
-                  p !== null &&
-                  "toolCallId" in p &&
-                  (p as { toolCallId: string }).toolCallId === chunk.toolCallId,
-              );
-              if (tool) {
-                tool.output = chunk.output;
-                tool.state = "done";
+              const target = chunk.parentToolUseId
+                ? findToolPartInChildren(
+                    assistantParts,
+                    chunk.parentToolUseId,
+                    chunk.toolCallId,
+                  )
+                : findToolPart(assistantParts, chunk.toolCallId);
+              if (target) {
+                target.output = chunk.output;
+                target.state = "done";
               }
               break;
             }
             case "tool-output-error": {
-              const errTool = assistantParts.find(
-                (p): p is { toolCallId: string; error?: string; state: string } =>
-                  typeof p === "object" &&
-                  p !== null &&
-                  "toolCallId" in p &&
-                  (p as { toolCallId: string }).toolCallId === chunk.toolCallId,
-              );
-              if (errTool) {
-                errTool.error = chunk.error;
-                errTool.state = "error";
+              const errTarget = chunk.parentToolUseId
+                ? findToolPartInChildren(
+                    assistantParts,
+                    chunk.parentToolUseId,
+                    chunk.toolCallId,
+                  )
+                : findToolPart(assistantParts, chunk.toolCallId);
+              if (errTarget) {
+                errTarget.error = chunk.error;
+                errTarget.state = "error";
+              }
+              break;
+            }
+            case "subagent-started": {
+              const agentPart = findToolPart(assistantParts, chunk.toolCallId);
+              if (agentPart) {
+                agentPart.subagentStatus = "running";
+                agentPart.subagentDescription = chunk.description;
+              }
+              break;
+            }
+            case "subagent-finished": {
+              const agentPart = findToolPart(assistantParts, chunk.toolCallId);
+              if (agentPart) {
+                agentPart.subagentStatus = chunk.status;
+                agentPart.subagentSummary = chunk.summary;
               }
               break;
             }

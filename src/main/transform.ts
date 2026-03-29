@@ -32,21 +32,57 @@ export function createTransformer() {
   let currentToolCallId: string | null = null;
   let currentToolName: string | null = null;
   let accumulatedToolInput = "";
+  let currentParentToolUseId: string | null = null;
+  // Track active subagent parent from lifecycle messages.
+  // stream_event messages don't carry parent_tool_use_id from the SDK,
+  // so we derive it from task_started/task_notification boundaries.
+  let activeSubagentParent: string | null = null;
   const emittedToolIds = new Set<string>();
 
   return function* transform(msg: SDKMessage): Generator<ChatChunk> {
+    // Handle system lifecycle messages first to track subagent state
+    if (msg.type === "system" && "subtype" in msg) {
+      const subtype = msg.subtype as string;
+      const toolUseId =
+        "tool_use_id" in msg ? (msg.tool_use_id as string | undefined) : undefined;
+      if (!toolUseId) return;
+
+      if (subtype === "task_started") {
+        activeSubagentParent = toolUseId;
+        const description = "description" in msg ? String(msg.description) : "";
+        yield { type: "subagent-started", toolCallId: toolUseId, description };
+      } else if (subtype === "task_notification") {
+        const status =
+          "status" in msg
+            ? (msg.status as "completed" | "failed" | "stopped")
+            : "completed";
+        const summary = "summary" in msg ? String(msg.summary) : "";
+        yield { type: "subagent-finished", toolCallId: toolUseId, status, summary };
+        if (activeSubagentParent === toolUseId) activeSubagentParent = null;
+      }
+      return;
+    }
+
     if (msg.type === "stream_event") {
       const event = msg.event;
       if (!event) return;
+
+      // SDK doesn't set parent_tool_use_id on stream_events, so fall back
+      // to the tracked activeSubagentParent from task_started
+      currentParentToolUseId = msg.parent_tool_use_id || activeSubagentParent;
 
       if (event.type === "content_block_start") {
         const block = event.content_block;
         if (!block) return;
 
         if (block.type === "thinking") {
+          // Suppress subagent thinking (redundant with Agent tool output)
+          if (currentParentToolUseId) return;
           thinkingStarted = true;
           yield { type: "thinking-start" };
         } else if (block.type === "text") {
+          // Suppress subagent text (redundant with Agent tool output)
+          if (currentParentToolUseId) return;
           textStarted = true;
           yield { type: "text-start" };
         } else if (block.type === "tool_use") {
@@ -54,7 +90,12 @@ export function createTransformer() {
           currentToolName = block.name;
           accumulatedToolInput = "";
           emittedToolIds.add(block.id);
-          yield { type: "tool-input-start", toolCallId: block.id, toolName: block.name };
+          yield {
+            type: "tool-input-start",
+            toolCallId: block.id,
+            toolName: block.name,
+            parentToolUseId: currentParentToolUseId,
+          };
         }
       } else if (event.type === "content_block_delta") {
         const delta = event.delta;
@@ -63,7 +104,7 @@ export function createTransformer() {
         if (delta.type === "thinking_delta" && thinkingStarted) {
           const text = (delta as { thinking?: string }).thinking ?? "";
           if (text) yield { type: "thinking-delta", delta: text };
-        } else if (delta.type === "text_delta" && delta.text) {
+        } else if (delta.type === "text_delta" && textStarted && delta.text) {
           yield { type: "text-delta", delta: delta.text };
         } else if (delta.type === "input_json_delta" && currentToolCallId) {
           const text = (delta as { partial_json?: string }).partial_json ?? "";
@@ -73,6 +114,7 @@ export function createTransformer() {
               type: "tool-input-delta",
               toolCallId: currentToolCallId,
               delta: text,
+              parentToolUseId: currentParentToolUseId,
             };
           }
         }
@@ -93,6 +135,7 @@ export function createTransformer() {
             toolCallId: currentToolCallId,
             toolName: currentToolName,
             input: parsed,
+            parentToolUseId: currentParentToolUseId,
           };
           currentToolCallId = null;
           currentToolName = null;
@@ -113,6 +156,7 @@ export function createTransformer() {
         return;
       }
 
+      const parentId = msg.parent_tool_use_id || activeSubagentParent;
       for (const block of content) {
         if (block.type === "tool_use" && !emittedToolIds.has(block.id)) {
           emittedToolIds.add(block.id);
@@ -121,6 +165,7 @@ export function createTransformer() {
             toolCallId: block.id,
             toolName: block.name,
             input: block.input,
+            parentToolUseId: parentId,
           };
         }
       }
@@ -128,6 +173,7 @@ export function createTransformer() {
       const content = msg.message?.content;
       if (!Array.isArray(content)) return;
 
+      const parentId = msg.parent_tool_use_id || activeSubagentParent;
       for (const block of content) {
         if (block.type !== "tool_result") continue;
 
@@ -135,12 +181,18 @@ export function createTransformer() {
         const text = extractToolResultText(block.content);
 
         if (isError) {
-          yield { type: "tool-output-error", toolCallId: block.tool_use_id, error: text };
+          yield {
+            type: "tool-output-error",
+            toolCallId: block.tool_use_id,
+            error: text,
+            parentToolUseId: parentId,
+          };
         } else {
           yield {
             type: "tool-output-available",
             toolCallId: block.tool_use_id,
             output: text,
+            parentToolUseId: parentId,
           };
         }
       }

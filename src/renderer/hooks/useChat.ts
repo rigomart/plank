@@ -25,6 +25,35 @@ function appendText(parts: MessagePart[], delta: string): MessagePart[] {
   return [...parts, { type: "text", id: crypto.randomUUID(), text: delta }];
 }
 
+function updateToolCallChildren(
+  parts: MessagePart[],
+  parentToolCallId: string,
+  updater: (children: MessagePart[]) => MessagePart[],
+): MessagePart[] {
+  return parts.map((part) =>
+    part.type === "tool-call" && part.toolCallId === parentToolCallId
+      ? { ...part, children: updater(part.children ?? []) }
+      : part,
+  );
+}
+
+function updateToolCallMeta(
+  parts: MessagePart[],
+  toolCallId: string,
+  meta: Partial<
+    Pick<
+      Extract<MessagePart, { type: "tool-call" }>,
+      "subagentStatus" | "subagentSummary" | "subagentDescription"
+    >
+  >,
+): MessagePart[] {
+  return parts.map((part) =>
+    part.type === "tool-call" && part.toolCallId === toolCallId
+      ? { ...part, ...meta }
+      : part,
+  );
+}
+
 export function useChat({ chatId, cwd, model }: UseChatOptions) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isStreaming, setIsStreaming] = useState(false);
@@ -143,98 +172,236 @@ export function useChat({ chatId, cwd, model }: UseChatOptions) {
                 );
                 break;
 
-              case "tool-input-start":
-                setMessages((prev) =>
-                  updateLastAssistant(prev, assistantId, (m) => ({
-                    ...m,
-                    parts: [
-                      ...m.parts,
-                      {
-                        type: "tool-call",
-                        toolCallId: chunk.toolCallId,
-                        toolName: chunk.toolName,
-                        input: "",
-                        state: "streaming-input",
-                      },
-                    ],
-                  })),
-                );
-                break;
-
-              case "tool-input-delta":
-                setMessages((prev) =>
-                  updateLastAssistant(prev, assistantId, (m) => ({
-                    ...m,
-                    parts: m.parts.map((part) =>
-                      part.type === "tool-call" && part.toolCallId === chunk.toolCallId
-                        ? { ...part, input: part.input + chunk.delta }
-                        : part,
-                    ),
-                  })),
-                );
-                break;
-
-              case "tool-input-available":
-                setMessages((prev) =>
-                  updateLastAssistant(prev, assistantId, (m) => {
-                    const exists = m.parts.some(
-                      (part) =>
-                        part.type === "tool-call" && part.toolCallId === chunk.toolCallId,
-                    );
-                    if (exists) {
-                      return {
-                        ...m,
-                        parts: m.parts.map((part) =>
-                          part.type === "tool-call" &&
-                          part.toolCallId === chunk.toolCallId
-                            ? {
-                                ...part,
-                                input: JSON.stringify(chunk.input, null, 2),
-                                state: "running" as const,
-                              }
-                            : part,
-                        ),
-                      };
-                    }
-                    return {
+              case "tool-input-start": {
+                const parentId = chunk.parentToolUseId;
+                if (parentId) {
+                  setMessages((prev) =>
+                    updateLastAssistant(prev, assistantId, (m) => ({
                       ...m,
-                      parts: [
-                        ...m.parts,
+                      parts: updateToolCallChildren(m.parts, parentId, (children) => [
+                        ...children,
                         {
                           type: "tool-call" as const,
                           toolCallId: chunk.toolCallId,
                           toolName: chunk.toolName,
-                          input: JSON.stringify(chunk.input, null, 2),
-                          state: "running" as const,
+                          input: "",
+                          state: "streaming-input" as const,
+                        },
+                      ]),
+                    })),
+                  );
+                } else {
+                  setMessages((prev) =>
+                    updateLastAssistant(prev, assistantId, (m) => ({
+                      ...m,
+                      parts: [
+                        ...m.parts,
+                        {
+                          type: "tool-call",
+                          toolCallId: chunk.toolCallId,
+                          toolName: chunk.toolName,
+                          input: "",
+                          state: "streaming-input",
                         },
                       ],
-                    };
-                  }),
-                );
+                    })),
+                  );
+                }
                 break;
+              }
 
-              case "tool-output-available":
+              case "tool-input-delta": {
+                const parentId = chunk.parentToolUseId;
+                if (parentId) {
+                  setMessages((prev) =>
+                    updateLastAssistant(prev, assistantId, (m) => ({
+                      ...m,
+                      parts: updateToolCallChildren(m.parts, parentId, (children) =>
+                        children.map((part) =>
+                          part.type === "tool-call" &&
+                          part.toolCallId === chunk.toolCallId
+                            ? { ...part, input: part.input + chunk.delta }
+                            : part,
+                        ),
+                      ),
+                    })),
+                  );
+                } else {
+                  setMessages((prev) =>
+                    updateLastAssistant(prev, assistantId, (m) => ({
+                      ...m,
+                      parts: m.parts.map((part) =>
+                        part.type === "tool-call" && part.toolCallId === chunk.toolCallId
+                          ? { ...part, input: part.input + chunk.delta }
+                          : part,
+                      ),
+                    })),
+                  );
+                }
+                break;
+              }
+
+              case "tool-input-available": {
+                const parentId = chunk.parentToolUseId;
+                if (parentId) {
+                  setMessages((prev) =>
+                    updateLastAssistant(prev, assistantId, (m) => ({
+                      ...m,
+                      parts: updateToolCallChildren(m.parts, parentId, (children) => {
+                        const exists = children.some(
+                          (part) =>
+                            part.type === "tool-call" &&
+                            part.toolCallId === chunk.toolCallId,
+                        );
+                        if (exists) {
+                          return children.map((part) =>
+                            part.type === "tool-call" &&
+                            part.toolCallId === chunk.toolCallId
+                              ? {
+                                  ...part,
+                                  input: JSON.stringify(chunk.input, null, 2),
+                                  state: "running" as const,
+                                }
+                              : part,
+                          );
+                        }
+                        return [
+                          ...children,
+                          {
+                            type: "tool-call" as const,
+                            toolCallId: chunk.toolCallId,
+                            toolName: chunk.toolName,
+                            input: JSON.stringify(chunk.input, null, 2),
+                            state: "running" as const,
+                          },
+                        ];
+                      }),
+                    })),
+                  );
+                } else {
+                  setMessages((prev) =>
+                    updateLastAssistant(prev, assistantId, (m) => {
+                      const exists = m.parts.some(
+                        (part) =>
+                          part.type === "tool-call" &&
+                          part.toolCallId === chunk.toolCallId,
+                      );
+                      if (exists) {
+                        return {
+                          ...m,
+                          parts: m.parts.map((part) =>
+                            part.type === "tool-call" &&
+                            part.toolCallId === chunk.toolCallId
+                              ? {
+                                  ...part,
+                                  input: JSON.stringify(chunk.input, null, 2),
+                                  state: "running" as const,
+                                }
+                              : part,
+                          ),
+                        };
+                      }
+                      return {
+                        ...m,
+                        parts: [
+                          ...m.parts,
+                          {
+                            type: "tool-call" as const,
+                            toolCallId: chunk.toolCallId,
+                            toolName: chunk.toolName,
+                            input: JSON.stringify(chunk.input, null, 2),
+                            state: "running" as const,
+                          },
+                        ],
+                      };
+                    }),
+                  );
+                }
+                break;
+              }
+
+              case "tool-output-available": {
+                const parentId = chunk.parentToolUseId;
+                if (parentId) {
+                  setMessages((prev) =>
+                    updateLastAssistant(prev, assistantId, (m) => ({
+                      ...m,
+                      parts: updateToolCallChildren(m.parts, parentId, (children) =>
+                        children.map((part) =>
+                          part.type === "tool-call" &&
+                          part.toolCallId === chunk.toolCallId
+                            ? { ...part, output: chunk.output, state: "done" as const }
+                            : part,
+                        ),
+                      ),
+                    })),
+                  );
+                } else {
+                  setMessages((prev) =>
+                    updateLastAssistant(prev, assistantId, (m) => ({
+                      ...m,
+                      parts: m.parts.map((part) =>
+                        part.type === "tool-call" && part.toolCallId === chunk.toolCallId
+                          ? { ...part, output: chunk.output, state: "done" as const }
+                          : part,
+                      ),
+                    })),
+                  );
+                }
+                break;
+              }
+
+              case "tool-output-error": {
+                const parentId = chunk.parentToolUseId;
+                if (parentId) {
+                  setMessages((prev) =>
+                    updateLastAssistant(prev, assistantId, (m) => ({
+                      ...m,
+                      parts: updateToolCallChildren(m.parts, parentId, (children) =>
+                        children.map((part) =>
+                          part.type === "tool-call" &&
+                          part.toolCallId === chunk.toolCallId
+                            ? { ...part, error: chunk.error, state: "error" as const }
+                            : part,
+                        ),
+                      ),
+                    })),
+                  );
+                } else {
+                  setMessages((prev) =>
+                    updateLastAssistant(prev, assistantId, (m) => ({
+                      ...m,
+                      parts: m.parts.map((part) =>
+                        part.type === "tool-call" && part.toolCallId === chunk.toolCallId
+                          ? { ...part, error: chunk.error, state: "error" as const }
+                          : part,
+                      ),
+                    })),
+                  );
+                }
+                break;
+              }
+
+              case "subagent-started":
                 setMessages((prev) =>
                   updateLastAssistant(prev, assistantId, (m) => ({
                     ...m,
-                    parts: m.parts.map((part) =>
-                      part.type === "tool-call" && part.toolCallId === chunk.toolCallId
-                        ? { ...part, output: chunk.output, state: "done" as const }
-                        : part,
-                    ),
+                    parts: updateToolCallMeta(m.parts, chunk.toolCallId, {
+                      subagentStatus: "running",
+                      subagentDescription: chunk.description,
+                    }),
                   })),
                 );
                 break;
 
-              case "tool-output-error":
+              case "subagent-finished":
                 setMessages((prev) =>
                   updateLastAssistant(prev, assistantId, (m) => ({
                     ...m,
-                    parts: m.parts.map((part) =>
-                      part.type === "tool-call" && part.toolCallId === chunk.toolCallId
-                        ? { ...part, error: chunk.error, state: "error" as const }
-                        : part,
-                    ),
+                    parts: updateToolCallMeta(m.parts, chunk.toolCallId, {
+                      subagentStatus: chunk.status,
+                      subagentSummary: chunk.summary,
+                    }),
                   })),
                 );
                 break;

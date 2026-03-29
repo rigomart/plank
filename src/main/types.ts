@@ -15,11 +15,45 @@ export type ChatChunk =
   | { type: "thinking-delta"; delta: string }
   | { type: "thinking-end" }
   // Tool calls
-  | { type: "tool-input-start"; toolCallId: string; toolName: string }
-  | { type: "tool-input-delta"; toolCallId: string; delta: string }
-  | { type: "tool-input-available"; toolCallId: string; toolName: string; input: unknown }
-  | { type: "tool-output-available"; toolCallId: string; output: string }
-  | { type: "tool-output-error"; toolCallId: string; error: string }
+  | {
+      type: "tool-input-start";
+      toolCallId: string;
+      toolName: string;
+      parentToolUseId: string | null;
+    }
+  | {
+      type: "tool-input-delta";
+      toolCallId: string;
+      delta: string;
+      parentToolUseId: string | null;
+    }
+  | {
+      type: "tool-input-available";
+      toolCallId: string;
+      toolName: string;
+      input: unknown;
+      parentToolUseId: string | null;
+    }
+  | {
+      type: "tool-output-available";
+      toolCallId: string;
+      output: string;
+      parentToolUseId: string | null;
+    }
+  | {
+      type: "tool-output-error";
+      toolCallId: string;
+      error: string;
+      parentToolUseId: string | null;
+    }
+  // Subagent lifecycle
+  | { type: "subagent-started"; toolCallId: string; description: string }
+  | {
+      type: "subagent-finished";
+      toolCallId: string;
+      status: "completed" | "failed" | "stopped";
+      summary: string;
+    }
   // Lifecycle
   | {
       type: "finish";
