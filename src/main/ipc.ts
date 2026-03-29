@@ -1,9 +1,4 @@
-import type { AnyRouter } from "@trpc/server";
-import {
-  callProcedure,
-  type ProcedureCallOptions,
-  type ProcedureType,
-} from "@trpc/server/unstable-core-do-not-import";
+import { type AnyRouter, callTRPCProcedure } from "@trpc/server";
 import { BrowserWindow, ipcMain } from "electron";
 
 interface SubscriptionState {
@@ -12,7 +7,7 @@ interface SubscriptionState {
 
 interface TrpcPayload {
   id: string;
-  type: ProcedureType;
+  type: "query" | "mutation" | "subscription";
   path: string;
   input: unknown;
 }
@@ -23,13 +18,13 @@ export function createIPCHandler(router: AnyRouter): void {
   ipcMain.handle("trpc", async (event, payload: TrpcPayload) => {
     const { id, type, path, input } = payload;
 
-    const opts: ProcedureCallOptions<unknown> & { router: AnyRouter } = {
+    const opts = {
       router,
       path,
       getRawInput: async () => input,
       ctx: {},
       type,
-      signal: undefined,
+      signal: undefined as AbortSignal | undefined,
       batchIndex: 0,
     };
 
@@ -43,7 +38,7 @@ export function createIPCHandler(router: AnyRouter): void {
 
       const iterate = async (): Promise<void> => {
         try {
-          const iterable = await callProcedure(opts);
+          const iterable = await callTRPCProcedure(opts);
 
           for await (const item of iterable) {
             if (abort.signal.aborted || win.isDestroyed()) break;
@@ -67,7 +62,7 @@ export function createIPCHandler(router: AnyRouter): void {
       return { subscribed: true };
     }
 
-    return callProcedure(opts);
+    return callTRPCProcedure(opts);
   });
 
   ipcMain.handle("trpc:unsubscribe", (_event, payload: { id: string }) => {
