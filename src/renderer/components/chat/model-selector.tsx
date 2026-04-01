@@ -26,16 +26,18 @@ export function ModelSelector({
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          size="xs"
-          className="gap-1 text-sm text-muted-foreground"
-          disabled={disabled}
-        >
-          {current?.displayName ?? value}
-          <ChevronDown className="size-3" />
-        </Button>
+      <DropdownMenuTrigger
+        render={
+          <Button
+            variant="ghost"
+            size="xs"
+            className="gap-1 text-sm text-muted-foreground"
+            disabled={disabled}
+          />
+        }
+      >
+        {current?.displayName ?? value}
+        <ChevronDown className="size-3" />
       </DropdownMenuTrigger>
       <DropdownMenuContent side="top" align="start">
         <DropdownMenuRadioGroup value={value} onValueChange={onValueChange}>

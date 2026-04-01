@@ -1,6 +1,7 @@
 import { useQueries, useQueryClient } from "@tanstack/react-query";
 import { trpc } from "../../trpc";
 import type { WorkspaceEntry } from "../../types";
+import { SidebarInset, SidebarProvider } from "../ui/sidebar";
 import { ChatList } from "./chat-list";
 
 function folderName(path: string): string {
@@ -13,6 +14,7 @@ interface ChatSidebarProps {
   onSelectChat: (workspacePath: string, chatId: string) => void;
   onNewChat: (workspacePath: string) => void;
   onAddWorkspace: () => void;
+  children: React.ReactNode;
 }
 
 export function ChatSidebar({
@@ -21,6 +23,7 @@ export function ChatSidebar({
   onSelectChat,
   onNewChat,
   onAddWorkspace,
+  children,
 }: ChatSidebarProps): React.JSX.Element {
   const queryClient = useQueryClient();
 
@@ -49,13 +52,16 @@ export function ChatSidebar({
   };
 
   return (
-    <ChatList
-      workspaces={workspacesWithChats}
-      activeChatId={activeChatId}
-      onSelectChat={onSelectChat}
-      onDeleteChat={handleDelete}
-      onNewChat={onNewChat}
-      onAddWorkspace={onAddWorkspace}
-    />
+    <SidebarProvider>
+      <ChatList
+        workspaces={workspacesWithChats}
+        activeChatId={activeChatId}
+        onSelectChat={onSelectChat}
+        onDeleteChat={handleDelete}
+        onNewChat={onNewChat}
+        onAddWorkspace={onAddWorkspace}
+      />
+      <SidebarInset>{children}</SidebarInset>
+    </SidebarProvider>
   );
 }

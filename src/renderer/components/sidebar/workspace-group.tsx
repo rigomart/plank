@@ -1,7 +1,11 @@
 import { ChevronRight, Plus } from "lucide-react";
-import { useState } from "react";
-import { Button } from "../ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../ui/collapsible";
+import {
+  SidebarGroup,
+  SidebarGroupAction,
+  SidebarGroupLabel,
+  SidebarMenu,
+} from "../ui/sidebar";
 import { ChatListItem } from "./chat-list-item";
 
 interface ChatSummary {
@@ -28,47 +32,38 @@ export function WorkspaceGroup({
   onDeleteChat,
   onNewChat,
 }: WorkspaceGroupProps): React.JSX.Element {
-  const [open, setOpen] = useState(true);
-
   return (
-    <Collapsible open={open} onOpenChange={setOpen}>
-      <div className="flex items-center gap-1 px-2 py-1">
-        <CollapsibleTrigger asChild>
-          <Button variant="ghost" size="icon-xs" className="shrink-0">
-            <ChevronRight
-              className={`size-3 text-muted-foreground transition-transform ${open ? "rotate-90" : ""}`}
-            />
-          </Button>
-        </CollapsibleTrigger>
-        <span className="min-w-0 flex-1 truncate text-sm font-semibold text-card-foreground">
-          {repoFullName || name}
-        </span>
-        <Button
-          variant="ghost"
-          size="icon-xs"
-          onClick={onNewChat}
-          title="New chat"
-          className="shrink-0"
+    <Collapsible defaultOpen className="group/collapsible">
+      <SidebarGroup className="p-0 px-2 py-1">
+        <SidebarGroupLabel
+          render={<CollapsibleTrigger />}
+          className="text-sm font-semibold text-sidebar-foreground"
         >
-          <Plus className="size-3" />
-        </Button>
-      </div>
-      <CollapsibleContent>
-        <div className="flex flex-col gap-0.5 pb-1 pl-3 pr-2">
-          {chats.map((chat) => (
-            <ChatListItem
-              key={chat.id}
-              name={chat.name}
-              isActive={chat.id === activeChatId}
-              onSelect={() => onSelectChat(chat.id)}
-              onDelete={(e) => onDeleteChat(chat.id, e)}
-            />
-          ))}
+          <ChevronRight className="transition-transform group-data-[state=open]/collapsible:rotate-90" />
+          <span className="truncate">{repoFullName || name}</span>
+        </SidebarGroupLabel>
+        <SidebarGroupAction onClick={onNewChat} title="New chat">
+          <Plus />
+        </SidebarGroupAction>
+        <CollapsibleContent>
+          <SidebarMenu>
+            {chats.map((chat) => (
+              <ChatListItem
+                key={chat.id}
+                name={chat.name}
+                isActive={chat.id === activeChatId}
+                onSelect={() => onSelectChat(chat.id)}
+                onDelete={(e) => onDeleteChat(chat.id, e)}
+              />
+            ))}
+          </SidebarMenu>
           {chats.length === 0 && (
-            <div className="px-2.5 py-2 text-xs text-muted-foreground">No chats yet</div>
+            <div className="px-2 py-2 text-xs text-sidebar-foreground/50">
+              No chats yet
+            </div>
           )}
-        </div>
-      </CollapsibleContent>
+        </CollapsibleContent>
+      </SidebarGroup>
     </Collapsible>
   );
 }

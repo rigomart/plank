@@ -73,21 +73,21 @@ export function ToolCallCard({
 
   return (
     <Collapsible open={open} onOpenChange={setOpen}>
-      <CollapsibleTrigger asChild>
-        <Button variant="ghost" size="sm" className="w-full">
-          <Icon className="size-3.5 shrink-0 text-muted-foreground" />
-          <span className="text-xs font-medium text-card-foreground">{toolName}</span>
-          <StateIcon state={state} />
+      <CollapsibleTrigger
+        render={<Button variant="ghost" size="sm" className="w-full" />}
+      >
+        <Icon className="size-3.5 shrink-0 text-muted-foreground" />
+        <span className="text-xs font-medium text-card-foreground">{toolName}</span>
+        <StateIcon state={state} />
 
-          {summary && (
-            <span className="min-w-0 flex-1 truncate text-xs text-muted-foreground">
-              {summary}
-            </span>
-          )}
-          <ChevronRight
-            className={`size-3 shrink-0 text-muted-foreground transition-transform ${open ? "rotate-90" : ""}`}
-          />
-        </Button>
+        {summary && (
+          <span className="min-w-0 flex-1 truncate text-xs text-muted-foreground">
+            {summary}
+          </span>
+        )}
+        <ChevronRight
+          className={`size-3 shrink-0 text-muted-foreground transition-transform ${open ? "rotate-90" : ""}`}
+        />
       </CollapsibleTrigger>
       <CollapsibleContent>
         <div className="mt-1 space-y-2 rounded-md border border-border bg-background px-3 py-2">

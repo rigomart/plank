@@ -58,27 +58,24 @@ export function Workbench(): React.JSX.Element {
   };
 
   return (
-    <div className="flex h-full w-full flex-col">
-      <div className="flex min-h-0 flex-1">
-        <ChatSidebar
-          workspaces={workspaces}
-          activeChatId={chatId}
-          onSelectChat={handleSelectChat}
-          onNewChat={handleNewChat}
-          onAddWorkspace={handleAddWorkspace}
-        />
-        {workspace && chatId ? (
-          <ChatPanel key={chatId} workspace={workspace} chatId={chatId} />
-        ) : (
-          <div className="flex flex-1 items-center justify-center">
-            <span className="text-sm text-muted-foreground">
-              {workspaces.length === 0
-                ? "Add a workspace to get started"
-                : "Select a chat or start a new one"}
-            </span>
-          </div>
-        )}
-      </div>
-    </div>
+    <ChatSidebar
+      workspaces={workspaces}
+      activeChatId={chatId}
+      onSelectChat={handleSelectChat}
+      onNewChat={handleNewChat}
+      onAddWorkspace={handleAddWorkspace}
+    >
+      {workspace && chatId ? (
+        <ChatPanel key={chatId} workspace={workspace} chatId={chatId} />
+      ) : (
+        <div className="flex flex-1 items-center justify-center">
+          <span className="text-sm text-muted-foreground">
+            {workspaces.length === 0
+              ? "Add a workspace to get started"
+              : "Select a chat or start a new one"}
+          </span>
+        </div>
+      )}
+    </ChatSidebar>
   );
 }

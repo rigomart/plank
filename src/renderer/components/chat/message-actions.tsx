@@ -47,19 +47,21 @@ export function MessageActions({ message }: MessageActionsProps): React.JSX.Elem
       </Button>
       {hasMetadata && (
         <Popover>
-          <PopoverTrigger asChild>
-            <Button
-              variant="ghost"
-              size="xs"
-              className="text-muted-foreground text-xs px-1.5"
-              title="Message info"
-            >
-              {durationMs != null ? (
-                formatDuration(durationMs)
-              ) : (
-                <Info className="size-3" />
-              )}
-            </Button>
+          <PopoverTrigger
+            render={
+              <Button
+                variant="ghost"
+                size="xs"
+                className="text-muted-foreground text-xs px-1.5"
+                title="Message info"
+              />
+            }
+          >
+            {durationMs != null ? (
+              formatDuration(durationMs)
+            ) : (
+              <Info className="size-3" />
+            )}
           </PopoverTrigger>
           <PopoverContent align="start" className="w-auto min-w-40 p-2">
             <div className="flex flex-col gap-1.5 text-xs">

@@ -55,27 +55,27 @@ export function SubagentCard({
 
   return (
     <Collapsible open={open} onOpenChange={setOpen}>
-      <CollapsibleTrigger asChild>
-        <Button variant="ghost" size="sm" className="w-full">
-          <Bot className="size-3.5 shrink-0 text-muted-foreground" />
-          <span className="text-xs font-medium text-card-foreground">Agent</span>
-          {isRunning ? (
-            <Loader2 className="size-3 animate-spin text-muted-foreground" />
-          ) : (
-            <StateIcon state={status === "completed" ? "done" : "error"} />
-          )}
-          <span className="min-w-0 flex-1 truncate text-xs text-muted-foreground">
-            {label}
+      <CollapsibleTrigger
+        render={<Button variant="ghost" size="sm" className="w-full" />}
+      >
+        <Bot className="size-3.5 shrink-0 text-muted-foreground" />
+        <span className="text-xs font-medium text-card-foreground">Agent</span>
+        {isRunning ? (
+          <Loader2 className="size-3 animate-spin text-muted-foreground" />
+        ) : (
+          <StateIcon state={status === "completed" ? "done" : "error"} />
+        )}
+        <span className="min-w-0 flex-1 truncate text-xs text-muted-foreground">
+          {label}
+        </span>
+        {!open && collapsedHint && (
+          <span className="min-w-0 max-w-[40%] truncate text-[10px] text-muted-foreground/60">
+            {collapsedHint}
           </span>
-          {!open && collapsedHint && (
-            <span className="min-w-0 max-w-[40%] truncate text-[10px] text-muted-foreground/60">
-              {collapsedHint}
-            </span>
-          )}
-          <ChevronRight
-            className={`size-3 shrink-0 text-muted-foreground transition-transform ${open ? "rotate-90" : ""}`}
-          />
-        </Button>
+        )}
+        <ChevronRight
+          className={`size-3 shrink-0 text-muted-foreground transition-transform ${open ? "rotate-90" : ""}`}
+        />
       </CollapsibleTrigger>
       <CollapsibleContent>
         <div

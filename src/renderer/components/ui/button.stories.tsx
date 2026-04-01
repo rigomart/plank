@@ -17,7 +17,7 @@ const meta: Meta<typeof Button> = {
       options: ["default", "xs", "sm", "lg", "icon", "icon-xs", "icon-sm", "icon-lg"],
     },
     disabled: { control: "boolean" },
-    asChild: { table: { disable: true } },
+    render: { table: { disable: true } },
   },
 };
 
