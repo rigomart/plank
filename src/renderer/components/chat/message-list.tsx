@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import type { ChatMessage } from "../../types";
+import { MessageErrorBoundary } from "../error-boundary";
 import { ScrollArea } from "../ui/scroll-area";
 import { EmptyState } from "./empty-state";
 import { MessageBubble } from "./message-bubble";
@@ -30,11 +31,12 @@ export function MessageList({
           />
         ) : (
           messages.map((msg) => (
-            <MessageBubble
-              key={msg.id}
-              message={msg}
-              isStreaming={isStreaming && msg === messages[messages.length - 1]}
-            />
+            <MessageErrorBoundary key={msg.id}>
+              <MessageBubble
+                message={msg}
+                isStreaming={isStreaming && msg === messages[messages.length - 1]}
+              />
+            </MessageErrorBoundary>
           ))
         )}
         <div ref={bottomRef} />

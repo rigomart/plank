@@ -38,7 +38,9 @@ export function ChatPanel({ workspace, chatId }: ChatPanelProps): React.JSX.Elem
         model={model}
         onModelChange={(value) => {
           setModel(value);
-          trpc.claude.updateChatModel.mutate({ chatId, model: value }).catch(() => {});
+          trpc.claude.updateChatModel
+            .mutate({ chatId, model: value })
+            .catch((err) => console.error("Failed to persist model selection:", err));
         }}
         isStreaming={isStreaming}
         onSubmit={sendMessage}
