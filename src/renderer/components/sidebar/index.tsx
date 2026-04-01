@@ -162,7 +162,10 @@ export function ChatSidebar({
 
   return (
     <Sidebar>
-      <SidebarHeader className="h-11 shrink-0" />
+      <SidebarHeader
+        className="h-11 shrink-0"
+        style={{ WebkitAppRegion: "drag" } as React.CSSProperties}
+      />
       <SidebarContent>
         <SidebarGroup>
           <div className="flex items-center justify-between px-2 pb-1">

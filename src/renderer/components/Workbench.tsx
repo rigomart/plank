@@ -1,27 +1,23 @@
 import { useState } from "react";
 import { ChatPanel } from "./chat";
+import { ChatHeader } from "./chat/chat-header";
 import { ChatSidebar, type Selection } from "./sidebar";
-import { SidebarInset, SidebarProvider, SidebarTrigger } from "./ui/sidebar";
+import { SidebarInset, SidebarProvider } from "./ui/sidebar";
 
 export function Workbench(): React.JSX.Element {
   const [selection, setSelection] = useState<Selection | null>(null);
 
   return (
-    <SidebarProvider>
-      <div
-        className="fixed inset-x-0 top-0 z-50 flex h-11 items-center pl-20"
-        style={{ WebkitAppRegion: "drag" } as React.CSSProperties}
-      >
-        <div style={{ WebkitAppRegion: "no-drag" } as React.CSSProperties}>
-          <SidebarTrigger />
-        </div>
-      </div>
+    <SidebarProvider open>
       <ChatSidebar
         onSelectionChange={setSelection}
         activeChatId={selection?.chatId ?? null}
       />
       <SidebarInset>
-        <div className="h-11 shrink-0" />
+        <ChatHeader
+          chatId={selection?.chatId || undefined}
+          workspace={selection?.workspace}
+        />
         {selection?.chatId ? (
           <ChatPanel
             key={selection.chatId}
