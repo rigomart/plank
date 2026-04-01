@@ -48,7 +48,7 @@ export function WorkspaceGroup({
           size="icon-xs"
           onClick={onNewChat}
           title="New chat"
-          className="shrink-0 opacity-0 group-hover/group:opacity-100 hover:opacity-100 focus-visible:opacity-100"
+          className="shrink-0"
         >
           <Plus className="size-3" />
         </Button>

@@ -283,6 +283,19 @@ export const appRouter = t.router({
         }
 
         // Save complete assistant message after streaming
+        const agentParts = assistantParts.filter(
+          (p) =>
+            typeof p === "object" &&
+            p !== null &&
+            "toolName" in p &&
+            (p as ToolPartRecord).toolName === "Agent",
+        );
+        if (agentParts.length > 0) {
+          console.log(
+            "[trpc] Agent parts being saved:",
+            JSON.stringify(agentParts, null, 2),
+          );
+        }
         if (assistantParts.length > 0 || sessionId) {
           const assistantMsg: StoredMessage = {
             id: crypto.randomUUID(),

@@ -131,6 +131,12 @@ body {
   background: var(--ring);
 }
 
+/* Bypass Tailwind's @media (hover: hover) wrapper for group hover in Electron */
+.group:hover .show-on-hover,
+.group\/group:hover .show-on-hover {
+  opacity: 1 !important;
+}
+
 @keyframes grid-dot {
   0%,
   100% {

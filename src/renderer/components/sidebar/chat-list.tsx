@@ -45,7 +45,7 @@ export function ChatList({
           <Plus className="size-3.5" />
         </Button>
       </div>
-      <ScrollArea className="min-h-0 flex-1">
+      <ScrollArea className="min-h-0 min-w-0 flex-1">
         <div className="flex flex-col gap-1 pb-2">
           {workspaces.map((ws) => (
             <div key={ws.folderPath} className="group/group">
