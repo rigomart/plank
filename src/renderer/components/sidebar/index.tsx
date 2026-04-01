@@ -162,23 +162,22 @@ export function ChatSidebar({
 
   return (
     <Sidebar>
-      <SidebarHeader>
-        <div className="flex items-center justify-between">
-          <span className="text-sm font-medium text-sidebar-foreground/70">
-            Workspaces
-          </span>
-          <Button
-            variant="ghost"
-            size="icon-xs"
-            onClick={handleAddWorkspace}
-            title="Add workspace"
-          >
-            <Plus className="size-4" />
-          </Button>
-        </div>
-      </SidebarHeader>
+      <SidebarHeader className="h-11 shrink-0" />
       <SidebarContent>
         <SidebarGroup>
+          <div className="flex items-center justify-between px-2 pb-1">
+            <span className="text-xs font-medium text-sidebar-foreground/50">
+              Workspaces
+            </span>
+            <Button
+              variant="ghost"
+              size="icon-xs"
+              onClick={handleAddWorkspace}
+              title="Add workspace"
+            >
+              <Plus className="size-3.5" />
+            </Button>
+          </div>
           <SidebarMenu>
             {workspacesWithChats.map((ws) => (
               <Collapsible key={ws.folderPath} defaultOpen className="group/collapsible">
