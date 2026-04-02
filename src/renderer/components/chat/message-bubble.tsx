@@ -1,7 +1,7 @@
 import { code } from "@streamdown/code";
-import { AlertCircle, Loader2 } from "lucide-react";
 import { Streamdown } from "streamdown";
 import type { ChatMessage, ErrorCategory } from "../../types";
+import { LoadingGrid } from "../ui/loading-grid";
 import { MessageActions } from "./message-actions";
 import { SubagentCard } from "./subagent-card";
 import { ThinkingBlock } from "./thinking-block";
@@ -47,11 +47,9 @@ export function MessageBubble({
   // Assistant message
   if (isEmpty && isStreaming) {
     return (
-      <div className="flex justify-start">
-        <div className="flex items-center gap-2 text-muted-foreground">
-          <Loader2 className="size-3.5 animate-spin" />
-          <span className="text-xs">Thinking...</span>
-        </div>
+      <div className="flex items-center gap-1.5 px-1.5 py-1">
+        <LoadingGrid className="size-3 text-muted-foreground" />
+        <span className="text-xs text-muted-foreground">Thinking...</span>
       </div>
     );
   }
@@ -86,10 +84,8 @@ export function MessageBubble({
                 key={part.toolCallId}
                 toolCallId={part.toolCallId}
                 description={part.subagentDescription}
-                summary={part.subagentSummary}
                 status={part.subagentStatus}
                 input={part.input}
-                output={part.output}
               >
                 {part.children}
               </SubagentCard>
@@ -109,16 +105,13 @@ export function MessageBubble({
           );
         })}
         {message.error && (
-          <div className="flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2">
-            <AlertCircle className="mt-0.5 size-3.5 shrink-0 text-destructive" />
-            <div className="text-xs">
-              <div className="font-medium text-destructive">{message.error.message}</div>
-              {ERROR_HINTS[message.error.category] && (
-                <div className="mt-0.5 text-muted-foreground">
-                  {ERROR_HINTS[message.error.category]}
-                </div>
-              )}
-            </div>
+          <div className="px-1.5 py-1.5 text-xs">
+            <span className="text-destructive">{message.error.message}</span>
+            {ERROR_HINTS[message.error.category] && (
+              <span className="ml-1 text-muted-foreground">
+                {ERROR_HINTS[message.error.category]}
+              </span>
+            )}
           </div>
         )}
         {!isStreaming && <MessageActions message={message} />}

@@ -40,17 +40,23 @@ export function ThinkingBlock({
   return (
     <Collapsible open={open} onOpenChange={setOpen}>
       <CollapsibleTrigger
-        render={<Button variant="ghost" size="xs" className="w-full justify-start" />}
+        render={
+          <Button
+            variant="ghost"
+            size="xs"
+            className="w-full justify-start gap-1.5 px-1.5"
+          />
+        }
       >
-        {isStreaming ? <LoadingGrid className="size-3 text-muted-foreground" /> : null}
-        <span className="text-sm font-medium text-muted-foreground">{label}</span>
+        {isStreaming && <LoadingGrid className="size-3 text-muted-foreground" />}
+        <span className="text-xs font-medium text-muted-foreground">{label}</span>
         <ChevronRight
-          className={`size-3 shrink-0 text-muted-foreground transition-transform ${open ? "rotate-90" : ""}`}
+          className={`ml-auto size-3 shrink-0 text-muted-foreground transition-transform ${open ? "rotate-90" : ""}`}
         />
       </CollapsibleTrigger>
       <CollapsibleContent>
-        <div className="rounded-md bg-background p-2">
-          <pre className="max-h-64 overflow-auto whitespace-pre-wrap text-xs leading-relaxed text-muted-foreground">
+        <div className="ml-3 mt-1 border-l border-border pl-3">
+          <pre className="max-h-64 overflow-auto whitespace-pre-wrap font-mono text-[11px] leading-relaxed text-muted-foreground">
             {text}
           </pre>
         </div>

@@ -1,7 +1,5 @@
-import { Check, Copy, Info } from "lucide-react";
 import { useState } from "react";
 import type { ChatMessage } from "../../types";
-import { Button } from "../ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 
 function formatDuration(ms: number): string {
@@ -28,7 +26,6 @@ interface MessageActionsProps {
 export function MessageActions({ message }: MessageActionsProps): React.JSX.Element {
   const [copied, setCopied] = useState(false);
   const { usage, costUsd, durationMs } = message;
-  const hasMetadata = usage != null || costUsd != null || durationMs != null;
 
   const handleCopy = () => {
     navigator.clipboard.writeText(getMessageMarkdown(message));
@@ -37,60 +34,57 @@ export function MessageActions({ message }: MessageActionsProps): React.JSX.Elem
   };
 
   return (
-    <div className="flex items-center gap-0.5">
-      <Button variant="ghost" size="icon-xs" onClick={handleCopy} title="Copy message">
-        {copied ? (
-          <Check className="size-3 text-emerald-500" />
-        ) : (
-          <Copy className="size-3 text-muted-foreground" />
-        )}
-      </Button>
-      {hasMetadata && (
-        <Popover>
-          <PopoverTrigger
-            render={
-              <Button
-                variant="ghost"
-                size="xs"
-                className="text-muted-foreground text-xs px-1.5"
-                title="Message info"
-              />
-            }
-          >
-            {durationMs != null ? (
-              formatDuration(durationMs)
-            ) : (
-              <Info className="size-3" />
-            )}
-          </PopoverTrigger>
-          <PopoverContent align="start" className="w-auto min-w-40 p-2">
-            <div className="flex flex-col gap-1.5 text-xs">
-              {usage && (
+    <div className="flex items-center gap-1.5 px-1.5 pt-1 text-[11px] text-muted-foreground/60">
+      <button
+        type="button"
+        onClick={handleCopy}
+        className="transition-colors hover:text-muted-foreground"
+      >
+        {copied ? "Copied" : "Copy"}
+      </button>
+      {durationMs != null && (
+        <>
+          <span className="text-border">·</span>
+          <Popover>
+            <PopoverTrigger
+              render={
+                <button
+                  type="button"
+                  className="transition-colors hover:text-muted-foreground"
+                />
+              }
+            >
+              {formatDuration(durationMs)}
+            </PopoverTrigger>
+            <PopoverContent align="start" className="w-auto min-w-40 p-2">
+              <div className="flex flex-col gap-1.5 text-xs">
+                {usage && (
+                  <div className="flex justify-between gap-4">
+                    <span className="text-muted-foreground">tokens</span>
+                    <span className="font-mono text-card-foreground">
+                      {usage.inputTokens.toLocaleString()} /{" "}
+                      {usage.outputTokens.toLocaleString()}
+                    </span>
+                  </div>
+                )}
+                {costUsd != null && (
+                  <div className="flex justify-between gap-4">
+                    <span className="text-muted-foreground">cost</span>
+                    <span className="font-mono text-card-foreground">
+                      {formatCost(costUsd)}
+                    </span>
+                  </div>
+                )}
                 <div className="flex justify-between gap-4">
-                  <span className="text-muted-foreground">Tokens</span>
-                  <span className="text-card-foreground">
-                    {usage.inputTokens.toLocaleString()} in /{" "}
-                    {usage.outputTokens.toLocaleString()} out
-                  </span>
-                </div>
-              )}
-              {costUsd != null && (
-                <div className="flex justify-between gap-4">
-                  <span className="text-muted-foreground">Cost</span>
-                  <span className="text-card-foreground">{formatCost(costUsd)}</span>
-                </div>
-              )}
-              {durationMs != null && (
-                <div className="flex justify-between gap-4">
-                  <span className="text-muted-foreground">Duration</span>
-                  <span className="text-card-foreground">
+                  <span className="text-muted-foreground">duration</span>
+                  <span className="font-mono text-card-foreground">
                     {formatDuration(durationMs)}
                   </span>
                 </div>
-              )}
-            </div>
-          </PopoverContent>
-        </Popover>
+              </div>
+            </PopoverContent>
+          </Popover>
+        </>
       )}
     </div>
   );

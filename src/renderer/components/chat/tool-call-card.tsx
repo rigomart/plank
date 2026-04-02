@@ -1,27 +1,9 @@
-import {
-  AlertCircle,
-  Check,
-  ChevronRight,
-  FileText,
-  Loader2,
-  Pencil,
-  Search,
-  Terminal,
-} from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { useState } from "react";
 import type { ToolCallState } from "../../types";
 import { Button } from "../ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../ui/collapsible";
-
-const TOOL_ICONS: Record<string, typeof Terminal> = {
-  Bash: Terminal,
-  Read: FileText,
-  Write: FileText,
-  Edit: Pencil,
-  Glob: Search,
-  Grep: Search,
-  LS: Search,
-};
+import { StatusDot } from "./status-dot";
 
 function toolSummary(toolName: string, input: string): string {
   try {
@@ -39,16 +21,10 @@ function toolSummary(toolName: string, input: string): string {
   return "";
 }
 
-export function StateIcon({ state }: { state: ToolCallState }) {
-  switch (state) {
-    case "streaming-input":
-    case "running":
-      return <Loader2 className="size-3 animate-spin text-muted-foreground" />;
-    case "done":
-      return <Check className="size-3 text-emerald-500" />;
-    case "error":
-      return <AlertCircle className="size-3 text-destructive" />;
-  }
+function toDotState(state: ToolCallState): "running" | "done" | "error" {
+  if (state === "done") return "done";
+  if (state === "error") return "error";
+  return "running";
 }
 
 interface ToolCallCardProps {
@@ -68,58 +44,46 @@ export function ToolCallCard({
   state,
 }: ToolCallCardProps): React.JSX.Element {
   const [open, setOpen] = useState(false);
-  const Icon = TOOL_ICONS[toolName] ?? Terminal;
   const summary = toolSummary(toolName, input);
 
   return (
     <Collapsible open={open} onOpenChange={setOpen}>
       <CollapsibleTrigger
-        render={<Button variant="ghost" size="sm" className="w-full" />}
+        render={
+          <Button
+            variant="ghost"
+            size="xs"
+            className="w-full justify-start gap-1.5 px-1.5"
+          />
+        }
       >
-        <Icon className="size-3.5 shrink-0 text-muted-foreground" />
+        <StatusDot state={toDotState(state)} />
         <span className="text-xs font-medium text-card-foreground">{toolName}</span>
-        <StateIcon state={state} />
-
         {summary && (
-          <span className="min-w-0 flex-1 truncate text-xs text-muted-foreground">
+          <span className="min-w-0 flex-1 truncate font-mono text-xs text-muted-foreground">
             {summary}
           </span>
         )}
         <ChevronRight
-          className={`size-3 shrink-0 text-muted-foreground transition-transform ${open ? "rotate-90" : ""}`}
+          className={`ml-auto size-3 shrink-0 text-muted-foreground transition-transform ${open ? "rotate-90" : ""}`}
         />
       </CollapsibleTrigger>
       <CollapsibleContent>
-        <div className="mt-1 space-y-2 rounded-md border border-border bg-background px-3 py-2">
+        <div className="ml-3 mt-1 space-y-2 border-l border-border pl-3">
           {input && (
-            <div>
-              <div className="mb-1 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-                Input
-              </div>
-              <pre className="max-h-48 overflow-auto text-[11px] leading-relaxed text-card-foreground">
-                {input}
-              </pre>
-            </div>
+            <pre className="max-h-48 overflow-auto font-mono text-[11px] leading-relaxed text-muted-foreground">
+              {input}
+            </pre>
           )}
           {output && (
-            <div>
-              <div className="mb-1 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-                Output
-              </div>
-              <pre className="max-h-48 overflow-auto text-[11px] leading-relaxed text-card-foreground">
-                {output}
-              </pre>
-            </div>
+            <pre className="max-h-48 overflow-auto font-mono text-[11px] leading-relaxed text-card-foreground">
+              {output}
+            </pre>
           )}
           {error && (
-            <div>
-              <div className="mb-1 text-[10px] font-medium uppercase tracking-wider text-destructive">
-                Error
-              </div>
-              <pre className="max-h-48 overflow-auto text-[11px] leading-relaxed text-destructive">
-                {error}
-              </pre>
-            </div>
+            <pre className="max-h-48 overflow-auto font-mono text-[11px] leading-relaxed text-destructive">
+              {error}
+            </pre>
           )}
         </div>
       </CollapsibleContent>

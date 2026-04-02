@@ -1,18 +1,17 @@
-import { Bot, ChevronRight, Loader2 } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type { MessagePart } from "../../types";
 import { Button } from "../ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "../ui/collapsible";
-import { StateIcon, ToolCallCard } from "./tool-call-card";
+import { StatusDot } from "./status-dot";
+import { ToolCallCard } from "./tool-call-card";
 
 interface SubagentCardProps {
   toolCallId: string;
   description?: string;
-  summary?: string;
   status?: "running" | "completed" | "failed" | "stopped";
   children: MessagePart[];
   input: string;
-  output?: string;
 }
 
 function getAgentLabel(description?: string, input?: string): string {
@@ -27,11 +26,9 @@ function getAgentLabel(description?: string, input?: string): string {
 
 export function SubagentCard({
   description,
-  summary,
   status,
   children,
   input,
-  output,
 }: SubagentCardProps): React.JSX.Element {
   const [open, setOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -48,39 +45,32 @@ export function SubagentCard({
     }
   }, [toolCallChildren.length, open]);
 
-  const collapsedHint =
-    !open && (summary || output)
-      ? summary || (output && output.length > 120 ? `${output.slice(0, 120)}...` : output)
-      : null;
+  const dotState = isRunning ? "running" : status === "completed" ? "done" : "error";
 
   return (
     <Collapsible open={open} onOpenChange={setOpen}>
       <CollapsibleTrigger
-        render={<Button variant="ghost" size="sm" className="w-full" />}
+        render={
+          <Button
+            variant="ghost"
+            size="xs"
+            className="w-full justify-start gap-1.5 px-1.5"
+          />
+        }
       >
-        <Bot className="size-3.5 shrink-0 text-muted-foreground" />
+        <StatusDot state={dotState} />
         <span className="text-xs font-medium text-card-foreground">Agent</span>
-        {isRunning ? (
-          <Loader2 className="size-3 animate-spin text-muted-foreground" />
-        ) : (
-          <StateIcon state={status === "completed" ? "done" : "error"} />
-        )}
         <span className="min-w-0 flex-1 truncate text-xs text-muted-foreground">
           {label}
         </span>
-        {!open && collapsedHint && (
-          <span className="min-w-0 max-w-[40%] truncate text-[10px] text-muted-foreground/60">
-            {collapsedHint}
-          </span>
-        )}
         <ChevronRight
-          className={`size-3 shrink-0 text-muted-foreground transition-transform ${open ? "rotate-90" : ""}`}
+          className={`ml-auto size-3 shrink-0 text-muted-foreground transition-transform ${open ? "rotate-90" : ""}`}
         />
       </CollapsibleTrigger>
       <CollapsibleContent>
         <div
           ref={scrollRef}
-          className="mt-1 max-h-80 space-y-0.5 overflow-y-auto rounded-md border border-border bg-background/50 p-1"
+          className="ml-3 mt-1 max-h-80 space-y-0.5 overflow-y-auto border-l border-border pl-1"
         >
           {toolCallChildren.map((part) => {
             if (part.type !== "tool-call") return null;
@@ -97,9 +87,9 @@ export function SubagentCard({
             );
           })}
           {toolCallChildren.length === 0 && isRunning && (
-            <div className="flex items-center gap-2 px-2 py-1.5 text-muted-foreground">
-              <Loader2 className="size-3 animate-spin" />
-              <span className="text-xs">Starting agent...</span>
+            <div className="flex items-center gap-1.5 px-1.5 py-1 text-xs text-muted-foreground">
+              <StatusDot state="running" />
+              <span>Starting...</span>
             </div>
           )}
         </div>
